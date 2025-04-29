@@ -1,9 +1,9 @@
-﻿@* Categories.cshtml *@
+﻿@* @using Nop.Plugin.Misc.ProductWarranty.Areas.Admin.Models.WarrantyCategoryModel *@
+
 @{
-    Layout = "_AdminLayout";
-    
-    // var defaultGridPageSize = EngineContext.Current.Resolve<Nop.Core.Domain.Common.AdminAreaSettings>().DefaultGridPageSize;
-    // var gridPageSizes = EngineContext.Current.Resolve<Nop.Core.Domain.Common.AdminAreaSettings>().GridPageSizes;
+	//page title
+	ViewBag.PageTitle = "Warranty Categories";
+	Layout = "_AdminLayout";
 }
 
 <div class="content-header clearfix">
@@ -19,73 +19,17 @@
 </div>
 
 <div class="content">
-    <div class="card-body">
-        <div id="categories-grid"></div>
-        
-        <script>
-            $(document).ready(function() {
-                $("#categories-grid").kendoGrid({
-                    dataSource: {
-                        type: "json",
-                        transport: {
-                            read: {
-                                url: "@Url.Action("CategoryList", "Warranty")",
-                                type: "POST",
-                                dataType: "json",
-                                data: addAntiForgeryToken
-                            }
-                        },
-                        schema: {
-                            data: "Data",
-                            total: "Total",
-                            errors: "Errors"
-                        },
-                        error: function(e) {
-                            display_kendoui_grid_error(e);
-                            // Cancel the changes
-                            this.cancelChanges();
-                        },
-                        serverPaging: true,
-                        serverFiltering: true,
-                        serverSorting: true
-                    },
-                    pageable: {
-                        refresh: true,
-                    },
-                    editable: {
-                        confirmation: "@T("Admin.Common.DeleteConfirmation")",
-                        mode: "inline"
-                    },
-                    scrollable: false,
-                    columns: [{
-                        field: "Name",
-                        title: "@T("Plugins.Misc.ProductWarranty.WarrantyCategory.Fields.Name")",
-                        width: 200
-                    }, {
-                        field: "DurationMonths",
-                        title: "@T("Plugins.Misc.ProductWarranty.WarrantyCategory.Fields.DurationMonths")",
-                        width: 100
-                    }, {
-                        field: "DisplayOrder",
-                        title: "@T("Plugins.Misc.ProductWarranty.WarrantyCategory.Fields.DisplayOrder")",
-                        width: 100
-                    }, {
-                        field: "Published",
-                        title: "@T("Plugins.Misc.ProductWarranty.WarrantyCategory.Fields.Published")",
-                        width: 100,
-                        headerAttributes: { style: "text-align:center" },
-                        attributes: { style: "text-align:center" },
-                        template: '# if(Published) {# <i class="fas fa-check true-icon"></i> #} else {# <i class="fas fa-times false-icon"></i> #} #'
-                    }, {
-                        field: "Id",
-                        title: "@T("Admin.Common.Edit")",
-                        width: 100,
-                        headerAttributes: { style: "text-align:center" },
-                        attributes: { style: "text-align:center" },
-                        template: '<a class="btn btn-default" href="EditCategory/#=Id#"><i class="fas fa-pencil-alt"></i>@T("Admin.Common.Edit")</a>'
-                    }]
-                });
-            });
-        </script>
-    </div>
+    <div class="form-horizontal">
+		<div class="panel-group">
+			<div class="panel panel-default">
+				<div class="panel-body">
+					<nop-tabs id="warranty-categories">
+						<nop-tab asp-name="categories" asp-title="@T("Plugins.Misc.ProductWarranty.WarrantyCategories")" asp-default="true">
+							<div id="categories-grid"></div>
+						</nop-tab>
+					</nop-tabs>
+				</div>
+			</div>
+		</div>
+	</div>
 </div>

@@ -3,8 +3,8 @@
 @{
     Layout = "_AdminLayout";
     
-    var defaultGridPageSize = EngineContext.Current.Resolve<Nop.Core.Domain.Common.AdminAreaSettings>().DefaultGridPageSize;
-    var gridPageSizes = EngineContext.Current.Resolve<Nop.Core.Domain.Common.AdminAreaSettings>().GridPageSizes;
+    // var defaultGridPageSize = EngineContext.Current.Resolve<Nop.Core.Domain.Common.AdminAreaSettings>().DefaultGridPageSize;
+    // var gridPageSizes = EngineContext.Current.Resolve<Nop.Core.Domain.Common.AdminAreaSettings>().GridPageSizes;
 }
 
 <div class="content-header clearfix">
@@ -122,14 +122,14 @@
                                         // Cancel the changes
                                         this.cancelChanges();
                                     },
-                                    // pageSize: @(defaultGridPageSize),
+                                    pageSize:
                                     serverPaging: true,
                                     serverFiltering: true,
                                     serverSorting: true
                                 },
                                 pageable: {
                                     refresh: true,
-                                    // pageSizes: [@(gridPageSizes)]
+                                    pageSizes: 
                                 },
                                 editable: {
                                     confirmation: "@T("Admin.Common.DeleteConfirmation")",
