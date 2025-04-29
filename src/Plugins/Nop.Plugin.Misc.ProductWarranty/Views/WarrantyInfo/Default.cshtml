@@ -1,0 +1,39 @@
+﻿@* Default.cshtml - The view for displaying warranty information on product pages *@
+@model Nop.Plugin.Misc.ProductWarranty.Models.PublicWarrantyModel
+
+@if (Model.WarrantyItems.Count > 0)
+{
+    <div class="product-warranty-info">
+        <div class="title">
+            <strong>@T("Plugins.Misc.ProductWarranty.Public.Title")</strong>
+        </div>
+        <div class="warranty-details">
+            @foreach (var item in Model.WarrantyItems)
+            {
+                <div class="warranty-item">
+                    <div class="warranty-name">
+                        <strong>@item.Name</strong>
+                        @if (item.DurationMonths > 0)
+                        {
+                            <span class="warranty-duration">
+                                (@item.DurationMonths @(item.DurationMonths == 1 ? T("Plugins.Misc.ProductWarranty.Public.Month") : T("Plugins.Misc.ProductWarranty.Public.Months")))
+                            </span>
+                        }
+                    </div>
+                    @if (!string.IsNullOrEmpty(item.Description))
+                    {
+                        <div class="warranty-description">
+                            @Html.Raw(item.Description)
+                        </div>
+                    }
+                    @if (!string.IsNullOrEmpty(item.Notes))
+                    {
+                        <div class="warranty-notes">
+                            @Html.Raw(item.Notes)
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+    </div>
+}

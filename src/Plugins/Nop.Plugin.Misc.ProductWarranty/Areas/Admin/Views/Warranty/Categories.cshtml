@@ -1,0 +1,91 @@
+﻿@* Categories.cshtml *@
+@{
+    Layout = "_AdminLayout";
+    
+    // var defaultGridPageSize = EngineContext.Current.Resolve<Nop.Core.Domain.Common.AdminAreaSettings>().DefaultGridPageSize;
+    // var gridPageSizes = EngineContext.Current.Resolve<Nop.Core.Domain.Common.AdminAreaSettings>().GridPageSizes;
+}
+
+<div class="content-header clearfix">
+    <h1 class="float-left">
+        @T("Plugins.Misc.ProductWarranty.WarrantyCategories")
+    </h1>
+    <div class="float-right">
+        <a asp-action="CreateCategory" class="btn btn-primary">
+            <i class="fas fa-plus-square"></i>
+            @T("Admin.Common.AddNew")
+        </a>
+    </div>
+</div>
+
+<div class="content">
+    <div class="card-body">
+        <div id="categories-grid"></div>
+        
+        <script>
+            $(document).ready(function() {
+                $("#categories-grid").kendoGrid({
+                    dataSource: {
+                        type: "json",
+                        transport: {
+                            read: {
+                                url: "@Url.Action("CategoryList", "Warranty")",
+                                type: "POST",
+                                dataType: "json",
+                                data: addAntiForgeryToken
+                            }
+                        },
+                        schema: {
+                            data: "Data",
+                            total: "Total",
+                            errors: "Errors"
+                        },
+                        error: function(e) {
+                            display_kendoui_grid_error(e);
+                            // Cancel the changes
+                            this.cancelChanges();
+                        },
+                        serverPaging: true,
+                        serverFiltering: true,
+                        serverSorting: true
+                    },
+                    pageable: {
+                        refresh: true,
+                    },
+                    editable: {
+                        confirmation: "@T("Admin.Common.DeleteConfirmation")",
+                        mode: "inline"
+                    },
+                    scrollable: false,
+                    columns: [{
+                        field: "Name",
+                        title: "@T("Plugins.Misc.ProductWarranty.WarrantyCategory.Fields.Name")",
+                        width: 200
+                    }, {
+                        field: "DurationMonths",
+                        title: "@T("Plugins.Misc.ProductWarranty.WarrantyCategory.Fields.DurationMonths")",
+                        width: 100
+                    }, {
+                        field: "DisplayOrder",
+                        title: "@T("Plugins.Misc.ProductWarranty.WarrantyCategory.Fields.DisplayOrder")",
+                        width: 100
+                    }, {
+                        field: "Published",
+                        title: "@T("Plugins.Misc.ProductWarranty.WarrantyCategory.Fields.Published")",
+                        width: 100,
+                        headerAttributes: { style: "text-align:center" },
+                        attributes: { style: "text-align:center" },
+                        template: '# if(Published) {# <i class="fas fa-check true-icon"></i> #} else {# <i class="fas fa-times false-icon"></i> #} #'
+                    }, {
+                        field: "Id",
+                        title: "@T("Admin.Common.Edit")",
+                        width: 100,
+                        headerAttributes: { style: "text-align:center" },
+                        attributes: { style: "text-align:center" },
+                        template: '<a class="btn btn-default" href="EditCategory/#=Id#"><i class="fas fa-pencil-alt"></i>@T("Admin.Common.Edit")</a>'
+                    }]
+                });
+            });
+        </script>
+    </div>
+</div>

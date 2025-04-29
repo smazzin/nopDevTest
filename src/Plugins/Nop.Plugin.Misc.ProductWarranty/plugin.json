@@ -1,0 +1,10 @@
+﻿{
+  "Group": "Misc",
+  "FriendlyName": "Product Warranty",
+  "SystemName": "Nop.Plugin.Misc.ProductWarranty",
+  "Version": "1.0",
+  "SupportedVersions": [ "4.80" ], // Adjust based on your nopCommerce version
+  "Author": "Your Name",
+  "DisplayOrder": 1,
+  "FileName": "Nop.Plugin.Misc.ProductWarranty.dll"
+}
