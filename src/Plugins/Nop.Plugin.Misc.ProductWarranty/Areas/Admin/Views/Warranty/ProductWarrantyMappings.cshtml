@@ -98,39 +98,39 @@
                     <script>
                         $(document).ready(function() {
                             $("#warranty-mappings-grid").kendoGrid({
-                                dataSource: {
-                                    type: "json",
-                                    transport: {
-                                        read: {
-                                            url: "@Url.Action("WarrantyMappingList", "Warranty")",
-                                            type: "POST",
-                                            dataType: "json",
-                                            data: function() {
-                                                return {
-                                                    productId: $("#ProductId").val()
-                                                };
-                                            }
-                                        }
-                                    },
-                                    schema: {
-                                        data: "Data",
-                                        total: "Total",
-                                        errors: "Errors"
-                                    },
-                                    error: function(e) {
-                                        display_kendoui_grid_error(e);
-                                        // Cancel the changes
-                                        this.cancelChanges();
-                                    },
-                                    pageSize:
-                                    serverPaging: true,
-                                    serverFiltering: true,
-                                    serverSorting: true
-                                },
-                                pageable: {
-                                    refresh: true,
-                                    pageSizes: 
-                                },
+								dataSource: {
+								type: "json",
+								transport: {
+									read: {
+										url: "@Url.Action("WarrantyMappingList", "Warranty")",
+										type: "POST",
+										dataType: "json",
+										data: function() {
+											return addAntiForgeryToken({
+												productId: $("#ProductId").val()
+											});
+										}
+									}
+								},
+									schema: {
+										data: "Data",
+										total: "Total",
+										errors: "Errors"
+									},
+									error: function(e) {
+										display_kendoui_grid_error(e);
+										// Cancel the changes
+										this.cancelChanges();
+									},
+									pageSize: 15,
+									serverPaging: true,
+									serverFiltering: true,
+									serverSorting: true
+								},
+								pageable: {
+									refresh: true,
+									pageSizes: [15, 25, 50, 100]
+								},
                                 editable: {
                                     confirmation: "@T("Admin.Common.DeleteConfirmation")",
                                     mode: "inline"
@@ -183,36 +183,42 @@
                             });
                             
                             // Add new mapping
-                            $("#addWarrantyMapping").click(function() {
-                                $.ajax({
-                                    cache: false,
-                                    type: "POST",
-                                    url: "@Url.Action("AddProductWarrantyMapping", "Warranty")",
-                                    data: {
-                                        ProductId: $("#ProductId").val(),
-                                        WarrantyCategoryId: $("#WarrantyCategoryId").val(),
-                                        Notes: $("#Notes").val(),
-                                        DisplayOrder: $("#DisplayOrder").val(),
-                                        IsActive: $("#IsActive").is(':checked')
-                                    },
-                                    success: function(data) {
-                                        if (data.Result) {
-                                            //refresh grid
-                                            $('#warranty-mappings-grid').data('kendoGrid').dataSource.read();
-                                            
-                                            //clear input
-                                            $("#Notes").val('');
-                                            $("#DisplayOrder").val(1);
-                                        } else {
-                                            //display errors
-                                            display_nop_error(data);
-                                        }
-                                    },
-                                    error: function(xhr, ajaxOptions, thrownError) {
-                                        alert('Failed to add mapping.');
-                                    }
-                                });
-                            });
+							$("#addWarrantyMapping").click(function() {
+								var formData = {
+									ProductId: $("#ProductId").val(),
+									WarrantyCategoryId: $("#WarrantyCategoryId").val(),
+									Notes: $("#Notes").val(),
+									DisplayOrder: $("#DisplayOrder").val(),
+									IsActive: $("#IsActive").is(':checked')
+								};
+
+								// Add anti-forgery token
+								addAntiForgeryToken(formData);
+
+								$.ajax({
+									cache: false,
+									type: "POST",
+									url: "@Url.Action("AddProductWarrantyMapping", "Warranty")",
+									data: formData,
+									success: function(data) {
+										if (data.Result) {
+											//refresh grid
+											$('#warranty-mappings-grid').data('kendoGrid').dataSource.read();
+
+											//clear input
+											$("#Notes").val('');
+											$("#DisplayOrder").val(1);
+										} else {
+											//display errors
+											display_nop_error(data);
+										}
+									},
+									error: function(xhr, ajaxOptions, thrownError) {
+										console.log(xhr.responseText); // Log the error response for debugging
+										alert('Failed to add mapping.');
+									}
+								});
+							});
                             
                             // Edit mapping
                             $(document).on('click', '.edit-warranty-mapping', function() {

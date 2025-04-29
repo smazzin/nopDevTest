@@ -173,11 +173,14 @@ namespace Nop.Plugin.Misc.ProductWarranty.Areas.Admin.Controllers
 
             var categories = await _warrantyService.GetAllWarrantyCategoriesAsync(true);
 
+            // Debug to output
+            System.Diagnostics.Debug.WriteLine($"Found {categories.Count} warranty categories");
+
             var model = categories.Select(x => new WarrantyCategoryModel
             {
                 Id = x.Id,
                 Name = x.Name,
-                Description = x.Description,
+                Description = x.Description ?? "", // Ensure no null values
                 DurationMonths = x.DurationMonths,
                 DisplayOrder = x.DisplayOrder,
                 Published = x.Published,
@@ -186,13 +189,7 @@ namespace Nop.Plugin.Misc.ProductWarranty.Areas.Admin.Controllers
             }).ToList();
 
             // Return in the format expected by DataTables
-            return Json(new
-            {
-                draw = draw,
-                recordsTotal = model.Count,
-                recordsFiltered = model.Count,
-                data = model
-            });
+            return Json(model);
         }
 
         public async Task<IActionResult> CreateCategory()
@@ -380,8 +377,19 @@ namespace Nop.Plugin.Misc.ProductWarranty.Areas.Admin.Controllers
         [HttpPost]
         public async Task<IActionResult> AddProductWarrantyMapping(WarrantyMappingModel model)
         {
-            if (ModelState.IsValid)
+            try
             {
+                // Debug logging
+                System.Diagnostics.Debug.WriteLine($"Received mapping request: Product={model.ProductId}, Warranty={model.WarrantyCategoryId}");
+
+                if (!ModelState.IsValid)
+                {
+                    // Log validation errors
+                    var errors = ModelState.Values.SelectMany(v => v.Errors.Select(e => e.ErrorMessage)).ToList();
+                    System.Diagnostics.Debug.WriteLine($"Validation errors: {string.Join(", ", errors)}");
+                    return Json(new { Result = false, Errors = errors });
+                }
+
                 var mapping = new ProductWarrantyMappingRecord
                 {
                     ProductId = model.ProductId,
@@ -392,13 +400,18 @@ namespace Nop.Plugin.Misc.ProductWarranty.Areas.Admin.Controllers
                 };
 
                 await _warrantyService.InsertProductWarrantyMappingAsync(mapping);
+                System.Diagnostics.Debug.WriteLine($"Successfully added mapping with ID: {mapping.Id}");
 
                 _notificationService.SuccessNotification(await _localizationService.GetResourceAsync("Plugins.Misc.ProductWarranty.WarrantyMapping.Added"));
 
                 return Json(new { Result = true });
             }
-
-            return Json(new { Result = false, Errors = ModelState.Values.SelectMany(v => v.Errors.Select(e => e.ErrorMessage)).ToList() });
+            catch (Exception ex)
+            {
+                // Log the exception
+                System.Diagnostics.Debug.WriteLine($"Error adding warranty mapping: {ex.Message}");
+                return Json(new { Result = false, Error = ex.Message });
+            }
         }
 
         [HttpPost]
