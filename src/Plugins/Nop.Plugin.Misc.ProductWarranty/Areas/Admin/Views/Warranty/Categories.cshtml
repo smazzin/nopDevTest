@@ -1,5 +1,4 @@
-﻿@* @using Nop.Plugin.Misc.ProductWarranty.Areas.Admin.Models.WarrantyCategoryModel *@
-
+﻿@using Nop.Plugin.Misc.ProductWarranty.Areas.Admin.Models
 @{
 	//page title
 	ViewBag.PageTitle = "Warranty Categories";
@@ -7,27 +6,66 @@
 }
 
 <div class="content-header clearfix">
-    <h1 class="float-left">
-        @T("Plugins.Misc.ProductWarranty.WarrantyCategories")
-    </h1>
-    <div class="float-right">
-        <a asp-action="CreateCategory" class="btn btn-primary">
-            <i class="fas fa-plus-square"></i>
-            @T("Admin.Common.AddNew")
-        </a>
-    </div>
+	<h1 class="float-left">
+		@T("Plugins.Misc.ProductWarranty.WarrantyCategories")
+	</h1>
+	<div class="float-right">
+		<a asp-action="CreateCategory" class="btn btn-primary">
+			<i class="fas fa-plus-square"></i>
+			@T("Admin.Common.AddNew")
+		</a>
+	</div>
 </div>
 
 <div class="content">
-    <div class="form-horizontal">
-		<div class="panel-group">
-			<div class="panel panel-default">
-				<div class="panel-body">
-					<nop-tabs id="warranty-categories">
-						<nop-tab asp-name="categories" asp-title="@T("Plugins.Misc.ProductWarranty.WarrantyCategories")" asp-default="true">
-							<div id="categories-grid"></div>
-						</nop-tab>
-					</nop-tabs>
+	<div class="form-horizontal">
+		<div class="cards-group">
+			<div class="card card-default">
+				<div class="card-body">
+					@await Html.PartialAsync("Table", new DataTablesModel
+					{
+						Name = "categories-grid",
+						UrlRead = new DataUrl("CategoryList", "Warranty", null),
+						Length = 15,
+						LengthMenu = "15, 25, 50, 100",
+						ColumnCollection = new List<ColumnProperty>
+					{
+					new ColumnProperty(nameof(WarrantyCategoryModel.Name))
+					{
+					Title = T("Plugins.Misc.ProductWarranty.WarrantyCategory.Fields.Name").Text,
+					Width = "200"
+					},
+					new ColumnProperty(nameof(WarrantyCategoryModel.Description))
+					{
+					Title = T("Plugins.Misc.ProductWarranty.WarrantyCategory.Fields.Description").Text,
+					Width = "300"
+					},
+					new ColumnProperty(nameof(WarrantyCategoryModel.DurationMonths))
+					{
+					Title = T("Plugins.Misc.ProductWarranty.WarrantyCategory.Fields.DurationMonths").Text,
+					Width = "100"
+					},
+					new ColumnProperty(nameof(WarrantyCategoryModel.DisplayOrder))
+					{
+					Title = T("Plugins.Misc.ProductWarranty.WarrantyCategory.Fields.DisplayOrder").Text,
+					Width = "100"
+					},
+					new ColumnProperty(nameof(WarrantyCategoryModel.Published))
+					{
+					Title = T("Plugins.Misc.ProductWarranty.WarrantyCategory.Fields.Published").Text,
+					Width = "100",
+					ClassName = NopColumnClassDefaults.CenterAll,
+					Render = new RenderBoolean()
+					},
+					new ColumnProperty(nameof(WarrantyCategoryModel.Id))
+					{
+					Title = T("Admin.Common.Edit").Text,
+					Width = "100",
+					ClassName = NopColumnClassDefaults.Button,
+					Render = new RenderButtonEdit(new DataUrl("EditCategory"))
+					}
+					}
+					})
 				</div>
 			</div>
 		</div>

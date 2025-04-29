@@ -159,6 +159,7 @@ namespace Nop.Plugin.Misc.ProductWarranty.Areas.Admin.Controllers
 
         public async Task<IActionResult> Categories()
         {
+
             return View("~/Plugins/Misc.ProductWarranty/Areas/Admin/Views/Warranty/Categories.cshtml");
         }
 
@@ -179,7 +180,16 @@ namespace Nop.Plugin.Misc.ProductWarranty.Areas.Admin.Controllers
                 UpdatedOn = x.UpdatedOnUtc
             }).ToList();
 
-            return Json(new { Data = model });
+            // Return in the format expected by DataTables
+            var totalRecords = model.Count;
+
+            return Json(new
+            {
+                draw = 1,
+                recordsTotal = totalRecords,
+                recordsFiltered = totalRecords,
+                data = model
+            });
         }
 
         public async Task<IActionResult> CreateCategory()
