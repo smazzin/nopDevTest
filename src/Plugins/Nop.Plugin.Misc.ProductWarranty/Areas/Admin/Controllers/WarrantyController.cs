@@ -166,6 +166,11 @@ namespace Nop.Plugin.Misc.ProductWarranty.Areas.Admin.Controllers
         [HttpPost]
         public async Task<IActionResult> CategoryList()
         {
+            // Get draw value from the request if available
+            int draw = 1;
+            if (Request.Form.ContainsKey("draw"))
+                int.TryParse(Request.Form["draw"].FirstOrDefault(), out draw);
+
             var categories = await _warrantyService.GetAllWarrantyCategoriesAsync(true);
 
             var model = categories.Select(x => new WarrantyCategoryModel
@@ -181,13 +186,11 @@ namespace Nop.Plugin.Misc.ProductWarranty.Areas.Admin.Controllers
             }).ToList();
 
             // Return in the format expected by DataTables
-            var totalRecords = model.Count;
-
             return Json(new
             {
-                draw = 1,
-                recordsTotal = totalRecords,
-                recordsFiltered = totalRecords,
+                draw = draw,
+                recordsTotal = model.Count,
+                recordsFiltered = model.Count,
                 data = model
             });
         }
