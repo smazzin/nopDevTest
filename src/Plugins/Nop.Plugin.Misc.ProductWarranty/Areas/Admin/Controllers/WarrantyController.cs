@@ -1,11 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Nop.Core;
-using Nop.Core.Domain.Catalog;
 using Nop.Plugin.Misc.ProductWarranty.Areas.Admin.Models;
 using Nop.Plugin.Misc.ProductWarranty.Domain;
 using Nop.Plugin.Misc.ProductWarranty.Services;
@@ -16,7 +11,6 @@ using Nop.Services.Messages;
 using Nop.Services.Security;
 using Nop.Web.Framework;
 using Nop.Web.Framework.Controllers;
-using Nop.Web.Framework.Models.DataTables;
 using Nop.Web.Framework.Mvc.Filters;
 
 namespace Nop.Plugin.Misc.ProductWarranty.Areas.Admin.Controllers
