@@ -18,14 +18,11 @@ namespace Nop.Plugin.Misc.ProductWarranty.Data
         public override void MapEntity(CreateTableExpressionBuilder table)
         {
             table
-                .WithColumn(nameof(ProductWarrantyMappingRecord.ProductId)).AsInt32().NotNullable()
+                .WithColumn(nameof(ProductWarrantyMappingRecord.ProductId)).AsInt32().NotNullable().ForeignKey<Product>()
                 .WithColumn(nameof(ProductWarrantyMappingRecord.WarrantyCategoryId)).AsInt32().NotNullable()
                 .WithColumn(nameof(ProductWarrantyMappingRecord.DisplayOrder)).AsInt32().NotNullable()
                 .WithColumn(nameof(ProductWarrantyMappingRecord.IsActive)).AsBoolean().NotNullable()
                 .WithColumn(nameof(ProductWarrantyMappingRecord.Notes)).AsString(int.MaxValue).Nullable();
-
-            // Create foreign key constraints
-            table.WithColumn(nameof(ProductWarrantyMappingRecord.ProductId)).AsInt32().ForeignKey<Product>(nameof(Product.Id));
         }
     }
 }

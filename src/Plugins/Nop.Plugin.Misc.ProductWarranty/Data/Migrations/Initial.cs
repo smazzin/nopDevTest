@@ -47,13 +47,6 @@ namespace Nop.Plugin.Misc.ProductWarranty.Data.Migrations
                 .ForeignColumn(nameof(ProductWarrantyMappingRecord.WarrantyCategoryId))
                 .ToTable(nameof(WarrantyCategoryRecord))
                 .PrimaryColumn("Id");
-
-            // Foreign key to Product table
-            Create.ForeignKey()
-                .FromTable(nameof(ProductWarrantyMappingRecord))
-                .ForeignColumn(nameof(ProductWarrantyMappingRecord.ProductId))
-                .ToTable("Product")
-                .PrimaryColumn("Id");
         }
     }
 }
