@@ -11,6 +11,7 @@ using Nop.Services.Messages;
 using Nop.Services.Security;
 using Nop.Web.Framework;
 using Nop.Web.Framework.Controllers;
+using Nop.Web.Framework.Models.Extensions;
 using Nop.Web.Framework.Mvc.Filters;
 
 namespace Nop.Plugin.Misc.ProductWarranty.Areas.Admin.Controllers
@@ -152,38 +153,57 @@ namespace Nop.Plugin.Misc.ProductWarranty.Areas.Admin.Controllers
 
         #region Warranty Categories
 
+        [AuthorizeAdmin]
+        [Area(AreaNames.ADMIN)]
         public async Task<IActionResult> Categories()
         {
+            // Initialize the search model
+            var model = new WarrantyCategorySearchModel();
 
-            return View("~/Plugins/Misc.ProductWarranty/Areas/Admin/Views/Warranty/Categories.cshtml");
+            // Set the grid page size - this is crucial!
+            model.SetGridPageSize();
+
+            return View("~/Plugins/Misc.ProductWarranty/Areas/Admin/Views/Warranty/Categories.cshtml", model);
         }
 
         [HttpPost]
-        public async Task<IActionResult> CategoryList()
+        [AuthorizeAdmin]
+        [Area(AreaNames.ADMIN)]
+        public async Task<IActionResult> CategoryList(WarrantyCategorySearchModel searchModel)
         {
-            // Get draw value from the request if available
-            int draw = 1;
-            if (Request.Form.ContainsKey("draw"))
-                int.TryParse(Request.Form["draw"].FirstOrDefault(), out draw);
-
+            // Get all categories
             var categories = await _warrantyService.GetAllWarrantyCategoriesAsync(true);
 
-            // Debug to output
-            System.Diagnostics.Debug.WriteLine($"Found {categories.Count} warranty categories");
+            // Create paged list
+            var pagedList = new PagedList<WarrantyCategoryRecord>(
+                categories,
+                searchModel.Page - 1,
+                searchModel.PageSize);
 
-            var model = categories.Select(x => new WarrantyCategoryModel
-            {
-                Id = x.Id,
-                Name = x.Name,
-                Description = x.Description ?? "", // Ensure no null values
-                DurationMonths = x.DurationMonths,
-                DisplayOrder = x.DisplayOrder,
-                Published = x.Published,
-                CreatedOn = x.CreatedOnUtc,
-                UpdatedOn = x.UpdatedOnUtc
-            }).ToList();
+            // Prepare the model
+            var model = new WarrantyCategoryListModel().PrepareToGrid<WarrantyCategoryListModel, WarrantyCategoryModel, WarrantyCategoryRecord>(
+                searchModel,
+                pagedList,
+                () =>
+                {
+                    return pagedList.Select(category =>
+                    {
+                        var categoryModel = new WarrantyCategoryModel
+                        {
+                            Id = category.Id,
+                            Name = category.Name,
+                            Description = category.Description ?? "",
+                            DurationMonths = category.DurationMonths,
+                            DisplayOrder = category.DisplayOrder,
+                            Published = category.Published,
+                            CreatedOn = category.CreatedOnUtc,
+                            UpdatedOn = category.UpdatedOnUtc
+                        };
 
-            // Return in the format expected by DataTables
+                        return categoryModel;
+                    });
+                });
+
             return Json(model);
         }
 

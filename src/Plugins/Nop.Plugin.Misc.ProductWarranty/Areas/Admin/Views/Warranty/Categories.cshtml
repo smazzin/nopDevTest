@@ -2,9 +2,9 @@
 	Layout = "_AdminLayout";
 	ViewBag.PageTitle = T("Plugins.Misc.ProductWarranty.WarrantyCategories").Text;
 }
-@* @model WarrentyCategorySearchModel *@
-@using Microsoft.AspNetCore.Routing
+@model Nop.Plugin.Misc.ProductWarranty.Areas.Admin.Models.WarrantyCategorySearchModel
 @using Nop.Plugin.Misc.ProductWarranty.Areas.Admin.Models
+@using Nop.Web.Framework.Models.DataTables
 
 <div class="content-header clearfix">
 	<h1 class="float-left">
@@ -23,50 +23,50 @@
 		<div class="cards-group">
 			<div class="card card-default">
 				<div class="card-body">
-					@await Html.PartialAsync("Table", new DataTablesModel
-{
-	Name = "categories-grid",
-	UrlRead = new DataUrl("CategoryList", "Warranty", new RouteValueDictionary { { "area", "Admin" } }),
-	Length = 15,
-	LengthMenu = "15, 25, 50, 100",
-	ColumnCollection = new List<ColumnProperty>
+					@await Html.PartialAsync("Table", new Nop.Web.Framework.Models.DataTables.DataTablesModel
 					{
-					new ColumnProperty(nameof(WarrantyCategoryModel.Name))
-					{
-					Title = T("Plugins.Misc.ProductWarranty.WarrantyCategory.Fields.Name").Text,
-					Width = "200"
-					},
-					new ColumnProperty(nameof(WarrantyCategoryModel.Description))
-					{
-					Title = T("Plugins.Misc.ProductWarranty.WarrantyCategory.Fields.Description").Text,
-					Width = "300"
-					},
-					new ColumnProperty(nameof(WarrantyCategoryModel.DurationMonths))
-					{
-					Title = T("Plugins.Misc.ProductWarranty.WarrantyCategory.Fields.DurationMonths").Text,
-					Width = "100"
-					},
-					new ColumnProperty(nameof(WarrantyCategoryModel.DisplayOrder))
-					{
-					Title = T("Plugins.Misc.ProductWarranty.WarrantyCategory.Fields.DisplayOrder").Text,
-					Width = "100"
-					},
-					new ColumnProperty(nameof(WarrantyCategoryModel.Published))
-					{
-					Title = T("Plugins.Misc.ProductWarranty.WarrantyCategory.Fields.Published").Text,
-					Width = "100",
-					ClassName = NopColumnClassDefaults.CenterAll,
-					Render = new RenderBoolean()
-					},
-					new ColumnProperty(nameof(WarrantyCategoryModel.Id))
-					{
-					Title = T("Admin.Common.Edit").Text,
-					Width = "100",
-					ClassName = NopColumnClassDefaults.Button,
-					Render = new RenderButtonEdit(new DataUrl("EditCategory", "Warranty", new RouteValueDictionary { { "area", "Admin" } }))
-					}
-					}
-})
+						Name = "categories-grid",
+						UrlRead = new DataUrl("CategoryList", "Warranty", new Microsoft.AspNetCore.Routing.RouteValueDictionary { { "area", "Admin" } }),
+						Length = Model.PageSize,
+						LengthMenu = Model.AvailablePageSizes,
+						ColumnCollection = new List<ColumnProperty>
+						{
+							new ColumnProperty(nameof(WarrantyCategoryModel.Name))
+							{
+								Title = T("Plugins.Misc.ProductWarranty.WarrantyCategory.Fields.Name").Text,
+								Width = "200"
+							},
+							new ColumnProperty(nameof(WarrantyCategoryModel.Description))
+							{
+								Title = T("Plugins.Misc.ProductWarranty.WarrantyCategory.Fields.Description").Text,
+								Width = "300"
+							},
+							new ColumnProperty(nameof(WarrantyCategoryModel.DurationMonths))
+							{
+								Title = T("Plugins.Misc.ProductWarranty.WarrantyCategory.Fields.DurationMonths").Text,
+								Width = "100"
+							},
+							new ColumnProperty(nameof(WarrantyCategoryModel.DisplayOrder))
+							{
+								Title = T("Plugins.Misc.ProductWarranty.WarrantyCategory.Fields.DisplayOrder").Text,
+								Width = "100"
+							},
+							new ColumnProperty(nameof(WarrantyCategoryModel.Published))
+							{
+								Title = T("Plugins.Misc.ProductWarranty.WarrantyCategory.Fields.Published").Text,
+								Width = "100",
+								ClassName = NopColumnClassDefaults.CenterAll,
+								Render = new RenderBoolean()
+							},
+							new ColumnProperty(nameof(WarrantyCategoryModel.Id))
+							{
+								Title = T("Admin.Common.Edit").Text,
+								Width = "100",
+								ClassName = NopColumnClassDefaults.Button,
+								Render = new RenderButtonEdit(new DataUrl("EditCategory", "Warranty"))
+								}
+							}
+					})
 				</div>
 			</div>
 		</div>
