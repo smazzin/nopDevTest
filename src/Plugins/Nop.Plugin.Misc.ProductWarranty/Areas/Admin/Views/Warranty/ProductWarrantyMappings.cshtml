@@ -78,6 +78,7 @@
 				<div class="card-header">
 					@T("Plugins.Misc.ProductWarranty.WarrantyMapping.List")
 				</div>
+				@*
 				<div class="card-body">
 					<div class="form-group row">
 						<div class="col-md-3">
@@ -91,118 +92,69 @@
 						</div>
 					</div>
 				</div>
+				*@
 				<div class="card-body">
-					@await Html.PartialAsync("Table", new Nop.Web.Framework.Models.DataTables.DataTablesModel
-{
-	Name = "warranty-mappings-grid",
-	UrlRead = new DataUrl("WarrantyMappingList", "Warranty"),
-	SearchButtonId = "search-warranty-mappings",
-	Length = 15,
-	LengthMenu = "15, 25, 50, 100",
-	Filters = new List<FilterParameter>
-					{
-					new FilterParameter(nameof(Model.ProductId), "search-product-id")
-					},
-	ColumnCollection = new List<ColumnProperty>
-					{
-					new ColumnProperty(nameof(WarrantyMappingModel.ProductName))
-					{
-					Title = T("Plugins.Misc.ProductWarranty.WarrantyMapping.Fields.Product").Text,
-					Width = "200"
-					},
-					new ColumnProperty(nameof(WarrantyMappingModel.WarrantyCategoryName))
-					{
-					Title = T("Plugins.Misc.ProductWarranty.WarrantyMapping.Fields.WarrantyCategory").Text,
-					Width = "200"
-					},
-					new ColumnProperty(nameof(WarrantyMappingModel.Notes))
-					{
-					Title = T("Plugins.Misc.ProductWarranty.WarrantyMapping.Fields.Notes").Text,
-					Width = "300"
-					},
-					new ColumnProperty(nameof(WarrantyMappingModel.DisplayOrder))
-					{
-					Title = T("Plugins.Misc.ProductWarranty.WarrantyMapping.Fields.DisplayOrder").Text,
-					Width = "100"
-					},
-					new ColumnProperty(nameof(WarrantyMappingModel.IsActive))
-					{
-					Title = T("Plugins.Misc.ProductWarranty.WarrantyMapping.Fields.IsActive").Text,
-					Width = "100",
-					ClassName = NopColumnClassDefaults.CenterAll,
-					Render = new RenderBoolean()
-					},
-					new ColumnProperty(nameof(WarrantyMappingModel.Id))
-					{
-					Title = T("Admin.Common.Edit").Text,
-					Width = "100",
-					ClassName = NopColumnClassDefaults.Button,
-					Render = new RenderCustom("renderEditButton")
-					},
-					new ColumnProperty(nameof(WarrantyMappingModel.Id))
-					{
-					Title = T("Admin.Common.Delete").Text,
-					Width = "100",
-					ClassName = NopColumnClassDefaults.Button,
-					Render = new RenderCustom("renderDeleteButton")
-					}
-					}
-})
+					<table id="warranty-mappings-grid" class="display" style="width:100%">
+						<thead>
+							<tr>
+								<th>Product</th>
+								<th>Category</th>
+								<th>Notes</th>
+								<th>Order</th>
+								<th>Active</th>
+								<th>Edit</th>
+								<th>Delete</th>
+							</tr>
+						</thead>
+					</table>
+
 					<script>
-						function renderEditButton(data, type, row, meta) {
-							return '<button type="button" class="btn btn-default edit-warranty-mapping" data-id="' + data + '"><i class="fas fa-pencil-alt"></i>@T("Admin.Common.Edit")</button>';
-						}
-
-						function renderDeleteButton(data, type, row, meta) {
-							return '<button type="button" class="btn btn-default delete-warranty-mapping" data-id="' + data + '"><i class="fas fa-trash-alt"></i>@T("Admin.Common.Delete")</button>';
-						}
-
 						$(document).ready(function() {
-							// Add new mapping
-							$("#addWarrantyMapping").click(function() {
-								var formData = {
-									ProductId: $("#ProductId").val(),
-									WarrantyCategoryId: $("#WarrantyCategoryId").val(),
-									Notes: $("#Notes").val(),
-									DisplayOrder: $("#DisplayOrder").val(),
-									IsActive: $("#IsActive").is(':checked')
-								};
-
-								// Add anti-forgery token
-								addAntiForgeryToken(formData);
-
-								$.ajax({
-									cache: false,
-									type: "POST",
-									url: "@Url.Action("AddProductWarrantyMapping", "Warranty")",
-									data: formData,
-									success: function(data) {
-										if (data.Result) {
-											//refresh grid
-											$('#warranty-mappings-grid').DataTable().ajax.reload();
-
-											//clear input
-											$("#Notes").val('');
-											$("#DisplayOrder").val(1);
-										} else {
-											//display errors
-											display_nop_error(data);
+							var dataTable = $('#warranty-mappings-grid').DataTable({
+								"processing": true,
+								"serverSide": true,
+								"ajax": {
+									"url": "@Url.Action("WarrantyMappingList", "Warranty")",
+									"type": "POST",
+									"data": function(d) {
+										d.productId = $('#search-product-id').val();
+										// Add anti-forgery token
+										d.__RequestVerificationToken = $('input[name=__RequestVerificationToken]').val();
+									}
+								},
+								"columns": [
+									{ "data": "ProductName" },
+									{ "data": "WarrantyCategoryName" },
+									{ "data": "Notes" },
+									{ "data": "DisplayOrder" },
+									{
+										"data": "IsActive",
+										"render": function(data) {
+											return data ? '<span class="true-icon"></span>' : '<span class="false-icon"></span>';
 										}
 									},
-									error: function(xhr, ajaxOptions, thrownError) {
-										console.log(xhr.responseText); // Log the error response for debugging
-										alert('Failed to add mapping.');
+									{
+										"data": "Id",
+										"render": function(data, type, row) {
+											return '<button type="button" class="btn btn-default edit-warranty-mapping" data-id="' + data + '"><i class="fas fa-pencil-alt"></i>Edit</button>';
+										}
+									},
+									{
+										"data": "Id",
+										"render": function(data, type, row) {
+											return '<button type="button" class="btn btn-default delete-warranty-mapping" data-id="' + data + '"><i class="fas fa-trash-alt"></i>Delete</button>';
+										}
 									}
-								});
+								]
 							});
 
 							// Edit mapping
 							$(document).on('click', '.edit-warranty-mapping', function() {
 								var id = $(this).data('id');
 								var row = $(this).closest('tr');
-								var table = $('#warranty-mappings-grid').DataTable();
-								var data = table.row(row).data();
+								var data = dataTable.row(row).data();
 
+								// Fill the form with the current values
 								$("#ProductId").val(data.ProductId);
 								$("#WarrantyCategoryId").val(data.WarrantyCategoryId);
 								$("#Notes").val(data.Notes);
@@ -213,6 +165,11 @@
 								$("#addWarrantyMapping").text('@T("Admin.Common.Update")');
 								$("#addWarrantyMapping").attr('data-id', id);
 								$("#addWarrantyMapping").removeClass('btn-primary').addClass('btn-success');
+
+								// Scroll to the form
+								$('html, body').animate({
+									scrollTop: $("#addWarrantyMapping").offset().top - 200
+								}, 500);
 
 								// Change click handler to update
 								$("#addWarrantyMapping").off('click').on('click', function() {
@@ -227,7 +184,7 @@
 									};
 
 									// Add anti-forgery token
-									addAntiForgeryToken(updateData);
+									updateData.__RequestVerificationToken = $('input[name=__RequestVerificationToken]').val();
 
 									$.ajax({
 										cache: false,
@@ -236,10 +193,10 @@
 										data: updateData,
 										success: function(data) {
 											if (data.Result) {
-												//refresh grid
-												$('#warranty-mappings-grid').DataTable().ajax.reload();
+												// Refresh grid
+												dataTable.ajax.reload();
 
-												//clear input
+												// Clear form
 												$("#Notes").val('');
 												$("#DisplayOrder").val(1);
 												$("#IsActive").prop('checked', true);
@@ -249,47 +206,16 @@
 												$("#addWarrantyMapping").removeAttr('data-id');
 												$("#addWarrantyMapping").removeClass('btn-success').addClass('btn-primary');
 
-												// Restore click handler
-												$("#addWarrantyMapping").off('click');
-												$("#addWarrantyMapping").click(function() {
-													// Original click handler code (same as above)
-													var formData = {
-														ProductId: $("#ProductId").val(),
-														WarrantyCategoryId: $("#WarrantyCategoryId").val(),
-														Notes: $("#Notes").val(),
-														DisplayOrder: $("#DisplayOrder").val(),
-														IsActive: $("#IsActive").is(':checked')
-													};
-
-													addAntiForgeryToken(formData);
-
-													$.ajax({
-														cache: false,
-														type: "POST",
-														url: "@Url.Action("AddProductWarrantyMapping", "Warranty")",
-														data: formData,
-														success: function(data) {
-															if (data.Result) {
-																$('#warranty-mappings-grid').DataTable().ajax.reload();
-																$("#Notes").val('');
-																$("#DisplayOrder").val(1);
-															} else {
-																display_nop_error(data);
-															}
-														},
-														error: function(xhr, ajaxOptions, thrownError) {
-															console.log(xhr.responseText);
-															alert('Failed to add mapping.');
-														}
-													});
-												});
+												// Restore original click handler
+												setupAddButtonHandler();
 											} else {
-												//display errors
+												// Display errors
 												display_nop_error(data);
 											}
 										},
-										error: function(xhr, ajaxOptions, thrownError) {
+										error: function(xhr) {
 											alert('Failed to update mapping.');
+											console.log(xhr.responseText);
 										}
 									});
 								});
@@ -300,11 +226,9 @@
 								if (confirm('@T("Admin.Common.AreYouSure")')) {
 									var id = $(this).data('id');
 									var deleteData = {
-										id: id
+										id: id,
+										__RequestVerificationToken: $('input[name=__RequestVerificationToken]').val()
 									};
-
-									// Add anti-forgery token
-									addAntiForgeryToken(deleteData);
 
 									$.ajax({
 										cache: false,
@@ -313,18 +237,65 @@
 										data: deleteData,
 										success: function(data) {
 											if (data.Result) {
-												//refresh grid
-												$('#warranty-mappings-grid').DataTable().ajax.reload();
+												// Refresh grid
+												dataTable.ajax.reload();
 											} else {
-												//display errors
+												// Display errors
 												display_nop_error(data);
 											}
 										},
-										error: function(xhr, ajaxOptions, thrownError) {
+										error: function(xhr) {
 											alert('Failed to delete mapping.');
+											console.log(xhr.responseText);
 										}
 									});
 								}
+							});
+
+							// Add new mapping - define this as a function so we can call it again after updating
+							function setupAddButtonHandler() {
+								$("#addWarrantyMapping").off('click').on('click', function() {
+									var formData = {
+										ProductId: $("#ProductId").val(),
+										WarrantyCategoryId: $("#WarrantyCategoryId").val(),
+										Notes: $("#Notes").val(),
+										DisplayOrder: $("#DisplayOrder").val(),
+										IsActive: $("#IsActive").is(':checked'),
+										__RequestVerificationToken: $('input[name=__RequestVerificationToken]').val()
+									};
+
+									$.ajax({
+										cache: false,
+										type: "POST",
+										url: "@Url.Action("AddProductWarrantyMapping", "Warranty")",
+										data: formData,
+										success: function(data) {
+											if (data.Result) {
+												// Refresh grid
+												dataTable.ajax.reload();
+
+												// Clear form
+												$("#Notes").val('');
+												$("#DisplayOrder").val(1);
+											} else {
+												// Display errors
+												display_nop_error(data);
+											}
+										},
+										error: function(xhr) {
+											alert('Failed to add mapping.');
+											console.log(xhr.responseText);
+										}
+									});
+								});
+							}
+
+							// Initialize the add button handler
+							setupAddButtonHandler();
+
+							// Search button handler
+							$("#search-warranty-mappings").click(function() {
+								dataTable.ajax.reload();
 							});
 						});
 					</script>
