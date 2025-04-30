@@ -1,5 +1,6 @@
 ﻿@* Default.cshtml - The view for displaying warranty information on product pages *@
 @model Nop.Plugin.Misc.ProductWarranty.Models.PublicWarrantyModel
+@inherits Nop.Web.Framework.Mvc.Razor.NopRazorPage<TModel>
 
 @if (Model.WarrantyItems.Count > 0)
 {
@@ -16,7 +17,7 @@
                         @if (item.DurationMonths > 0)
                         {
                             <span class="warranty-duration">
-                                (@item.DurationMonths @(item.DurationMonths == 1 ? T("Plugins.Misc.ProductWarranty.Public.Month") : T("Plugins.Misc.ProductWarranty.Public.Months")))
+                                (@item.DurationMonths @(item.DurationMonths == 1 ? ("Plugins.Misc.ProductWarranty.Public.Month") : T("Plugins.Misc.ProductWarranty.Public.Months")))
                             </span>
                         }
                     </div>

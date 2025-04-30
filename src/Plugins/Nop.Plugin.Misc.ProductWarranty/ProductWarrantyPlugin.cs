@@ -1,32 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Html;
-using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
 using Microsoft.AspNetCore.Mvc.Routing;
-using Microsoft.AspNetCore.Mvc.ViewComponents;
-using Microsoft.AspNetCore.Routing;
 using Nop.Core;
-using Nop.Core.Infrastructure;
-using Nop.Core.Domain.Cms;
 using Nop.Services.Cms;
 using Nop.Services.Common;
 using Nop.Services.Configuration;
 using Nop.Services.Localization;
 using Nop.Services.Plugins;
-using Nop.Web.Framework.Components;
 using Nop.Web.Framework.Infrastructure;
-using Nop.Web.Framework.Menu;
-using Nop.Plugin.Misc.ProductWarranty.Components;
-
-using System.Linq;
-using System.Collections.Generic;
-using Nop.Core.Domain.Localization;
-using Nop.Services.Security;
-using System.Threading.Tasks;
-using System.Diagnostics;
 
 namespace Nop.Plugin.Misc.ProductWarranty
 {
@@ -207,10 +189,7 @@ namespace Nop.Plugin.Misc.ProductWarranty
         /// </returns>
         public string GetWidgetViewComponentName(string widgetZone)
         {
-            if (widgetZone == PublicWidgetZones.ProductDetailsEssentialBottom)
-                return "WarrantyInfo";
-
-            return null;
+            return "WarrantyInfo";
         }
 
         /// <summary>

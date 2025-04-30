@@ -70,7 +70,7 @@ namespace Nop.Plugin.Misc.ProductWarranty.Controllers
             return Json(new
             {
                 success = true,
-                html = await this.RenderPartialViewToStringAsync("~/Views/WarrantyInfo/Default.cshtml", model)
+                html = await this.RenderPartialViewToStringAsync("~/Plugins/Misc.ProductWarranty/Views/WarrantyInfo/Default.cshtml", model)
             });
         }
     }
