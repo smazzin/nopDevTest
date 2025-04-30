@@ -16,6 +16,7 @@ using Nop.Services.Messages;
 using Nop.Services.Security;
 using Nop.Web.Framework;
 using Nop.Web.Framework.Controllers;
+using Nop.Web.Framework.Models.DataTables;
 using Nop.Web.Framework.Mvc.Filters;
 
 namespace Nop.Plugin.Misc.ProductWarranty.Areas.Admin.Controllers
@@ -324,7 +325,7 @@ namespace Nop.Plugin.Misc.ProductWarranty.Areas.Admin.Controllers
         public async Task<IActionResult> WarrantyMappingList(int productId = 0)
         {
             IList<ProductWarrantyMappingRecord> mappings;
-            
+
             // Get all product warranty mappings or filter by product ID if specified
             if (productId > 0)
             {
@@ -334,27 +335,16 @@ namespace Nop.Plugin.Misc.ProductWarranty.Areas.Admin.Controllers
             else
             {
                 // If no product ID is provided, get all mappings
-                // Option 1: Add a method to get all mappings directly from repository
                 mappings = await _warrantyService.GetAllProductWarrantyMappingsAsync(true);
-                
-                // Option 2: If you haven't added GetAllProductWarrantyMappingsAsync to your service,
-                // you can use this approach instead
-                /*
-                var allProducts = await _productService.SearchProductsAsync(pageSize: int.MaxValue, showHidden: true);
-                var allMappingTasks = allProducts.Select(p => 
-                    _warrantyService.GetProductWarrantyMappingsByProductIdAsync(p.Id, true));
-                var allMappingResults = await Task.WhenAll(allMappingTasks);
-                mappings = allMappingResults.SelectMany(x => x).ToList();
-                */
             }
 
             var model = new List<WarrantyMappingModel>();
-            
+
             foreach (var mapping in mappings)
             {
                 var product = await _productService.GetProductByIdAsync(mapping.ProductId);
                 var category = await _warrantyService.GetWarrantyCategoryByIdAsync(mapping.WarrantyCategoryId);
-                
+
                 if (product == null || category == null)
                     continue;
 
@@ -371,8 +361,16 @@ namespace Nop.Plugin.Misc.ProductWarranty.Areas.Admin.Controllers
                 });
             }
 
-            return Json(new { Data = model });
+            // Return in the format expected by DataTables
+            return Json(new
+            {
+                draw = 1,
+                recordsTotal = model.Count,
+                recordsFiltered = model.Count,
+                data = model
+            });
         }
+
 
         [HttpPost]
         public async Task<IActionResult> AddProductWarrantyMapping(WarrantyMappingModel model)
