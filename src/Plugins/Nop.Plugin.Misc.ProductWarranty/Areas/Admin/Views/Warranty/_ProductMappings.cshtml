@@ -14,56 +14,62 @@
 			</button>
 		</p>
 
+		@{
+			// Create a search model with properly initialized pagination properties
+			var searchModel = new WarrantyCategorySearchModel();
+			searchModel.SetGridPageSize();
+		}
+
 		@await Html.PartialAsync("Table", new Nop.Web.Framework.Models.DataTables.DataTablesModel
+{
+	Name = "category-product-mappings-grid",
+	UrlRead = new DataUrl("CategoryProductMappingList", "Warranty",
+		new Microsoft.AspNetCore.Routing.RouteValueDictionary {
+		{ "area", "Admin" },
+		{ "categoryId", Model.Id }
+		}),
+	Length = searchModel.PageSize,
+	LengthMenu = searchModel.AvailablePageSizes,
+	ColumnCollection = new List<ColumnProperty>
 		{
-			Name = "category-product-mappings-grid",
-			UrlRead = new DataUrl("CategoryProductMappingList", "Warranty",
-				new Microsoft.AspNetCore.Routing.RouteValueDictionary {
-				{ "area", "Admin" },
-				{ "categoryId", Model.Id }
-				}),
-			Length = Model.PageSize,
-			LengthMenu = Model.AvailablePageSizes,
-			ColumnCollection = new List<ColumnProperty>
-			{
-				new ColumnProperty(nameof(WarrantyMappingModel.ProductName))
-				{
-					Title = T("Plugins.Misc.ProductWarranty.WarrantyMapping.Fields.Product").Text,
-					Width = "200"
-				},
-				new ColumnProperty(nameof(WarrantyMappingModel.Notes))
-				{
-					Title = T("Plugins.Misc.ProductWarranty.WarrantyMapping.Fields.Notes").Text,
-					Width = "300"
-				},
-				new ColumnProperty(nameof(WarrantyMappingModel.DisplayOrder))
-				{
-					Title = T("Plugins.Misc.ProductWarranty.WarrantyMapping.Fields.DisplayOrder").Text,
-					Width = "100"
-				},
-				new ColumnProperty(nameof(WarrantyMappingModel.IsActive))
-				{
-					Title = T("Plugins.Misc.ProductWarranty.WarrantyMapping.Fields.IsActive").Text,
-					Width = "100",
-					ClassName = NopColumnClassDefaults.CenterAll,
-					Render = new RenderBoolean()
-				},
-				new ColumnProperty(nameof(WarrantyMappingModel.Id))
-				{
-					Title = T("Admin.Common.Edit").Text,
-					Width = "100",
-					ClassName = NopColumnClassDefaults.Button,
-					Render = new RenderCustom("renderEditButton")
-				},
-				new ColumnProperty(nameof(WarrantyMappingModel.Id))
-				{
-					Title = T("Admin.Common.Delete").Text,
-					Width = "100",
-					ClassName = NopColumnClassDefaults.Button,
-					Render = new RenderCustom("renderDeleteButton")
-				}
-			}
-		})
+		new ColumnProperty(nameof(WarrantyMappingModel.ProductName))
+		{
+		Title = T("Plugins.Misc.ProductWarranty.WarrantyMapping.Fields.Product").Text,
+		Width = "200"
+		},
+		new ColumnProperty(nameof(WarrantyMappingModel.Notes))
+		{
+		Title = T("Plugins.Misc.ProductWarranty.WarrantyMapping.Fields.Notes").Text,
+		Width = "300"
+		},
+		new ColumnProperty(nameof(WarrantyMappingModel.DisplayOrder))
+		{
+		Title = T("Plugins.Misc.ProductWarranty.WarrantyMapping.Fields.DisplayOrder").Text,
+		Width = "100"
+		},
+		new ColumnProperty(nameof(WarrantyMappingModel.IsActive))
+		{
+		Title = T("Plugins.Misc.ProductWarranty.WarrantyMapping.Fields.IsActive").Text,
+		Width = "100",
+		ClassName = NopColumnClassDefaults.CenterAll,
+		Render = new RenderBoolean()
+		},
+		new ColumnProperty(nameof(WarrantyMappingModel.Id))
+		{
+		Title = T("Admin.Common.Edit").Text,
+		Width = "100",
+		ClassName = NopColumnClassDefaults.Button,
+		Render = new RenderCustom("renderEditButton")
+		},
+		new ColumnProperty(nameof(WarrantyMappingModel.Id))
+		{
+		Title = T("Admin.Common.Delete").Text,
+		Width = "100",
+		ClassName = NopColumnClassDefaults.Button,
+		Render = new RenderCustom("renderDeleteButton")
+		}
+		}
+})
 	</div>
 </div>
 
