@@ -3,6 +3,9 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Nop.Core.Infrastructure;
 using Nop.Plugin.Misc.ProductWarranty.Services;
+using Nop.Services.Events;
+using Nop.Web.Framework.Events;
+using static Nop.Plugin.Misc.ProductWarranty.ProductWarrantyPlugin;
 
 namespace Nop.Plugin.Misc.ProductWarranty.Infrastructure
 {
@@ -20,6 +23,9 @@ namespace Nop.Plugin.Misc.ProductWarranty.Infrastructure
         {
             // Register warranty service
             services.AddScoped<IWarrantyService, WarrantyService>();
+
+            // Register event consumer
+            services.AddScoped<IConsumer<AdminMenuCreatedEvent>, AdminMenuEventConsumer>();
         }
 
         /// <summary>

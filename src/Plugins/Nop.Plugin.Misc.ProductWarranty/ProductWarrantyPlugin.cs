@@ -6,9 +6,13 @@ using Nop.Core;
 using Nop.Services.Cms;
 using Nop.Services.Common;
 using Nop.Services.Configuration;
+using Nop.Services.Events;
 using Nop.Services.Localization;
 using Nop.Services.Plugins;
+using Nop.Services.Security;
+using Nop.Web.Framework.Events;
 using Nop.Web.Framework.Infrastructure;
+using Nop.Web.Framework.Menu;
 
 namespace Nop.Plugin.Misc.ProductWarranty
 {
@@ -280,5 +284,50 @@ namespace Nop.Plugin.Misc.ProductWarranty
         //}
 
         #endregion
+
+        public class AdminMenuEventConsumer : IConsumer<AdminMenuCreatedEvent>
+        {
+            private readonly IPermissionService _permissionService;
+
+            public AdminMenuEventConsumer(IPermissionService permissionService)
+            {
+                _permissionService = permissionService;
+            }
+
+            public async Task HandleEventAsync(AdminMenuCreatedEvent eventMessage)
+            {
+                if (!await _permissionService.AuthorizeAsync(StandardPermission.Configuration.MANAGE_PLUGINS))
+                {
+                    eventMessage.RootMenuItem.InsertBefore("LocalPlugins",
+                        new AdminMenuItem
+                        {
+                            SystemName = "ProductWarranties",
+                            Title = "Product Warranties",
+                            Url = eventMessage.GetMenuItemUrl("Warranty", "Configure"),
+                            IconClass = "far fa-dot-circle",
+                            Visible = true,
+                            ChildNodes = new List<AdminMenuItem>
+                            {
+                            new AdminMenuItem
+                            {
+                                SystemName = "WarrantyCategories",
+                                Title = "Warranty Categories",
+                                Url = eventMessage.GetMenuItemUrl("Warranty", "Categories"),
+                                IconClass = "far fa-circle",
+                                Visible = true
+                            },
+                            new AdminMenuItem
+                            {
+                                SystemName = "ProductWarrantyMappings",
+                                Title = "Product Warranty Mappings",
+                                Url = eventMessage.GetMenuItemUrl("Warranty", "ProductWarrantyMappings"),
+                                IconClass = "far fa-circle",
+                                Visible = true
+                            }
+                            }
+                        });
+                }
+            }
+        }
     }
 }
