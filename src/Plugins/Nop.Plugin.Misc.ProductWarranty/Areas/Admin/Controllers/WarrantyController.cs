@@ -276,9 +276,19 @@ namespace Nop.Plugin.Misc.ProductWarranty.Areas.Admin.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> CategoryProductMappingList(int categoryId)
+        public async Task<IActionResult> CategoryProductMappingList(WarrantyCategorySearchModel searchModel)
         {
-            // Get the category first
+            // Get the category id from the request
+            int categoryId = searchModel.Id > 0 ? searchModel.Id : 0;
+
+            if (categoryId == 0)
+            {
+                // Try to get it from the request if not found in model
+                if (!int.TryParse(Request.Form["categoryId"], out categoryId) || categoryId == 0)
+                    return Json(new { Result = false, Error = "Category ID not provided" });
+            }
+
+            // Get the category
             var category = await _warrantyService.GetWarrantyCategoryByIdAsync(categoryId);
             if (category == null)
                 return Json(new { Result = false, Error = "Category not found" });
@@ -286,7 +296,8 @@ namespace Nop.Plugin.Misc.ProductWarranty.Areas.Admin.Controllers
             // Get mappings for this category
             var mappings = await _warrantyService.GetProductWarrantyMappingsByCategoryIdAsync(categoryId);
 
-            var model = new List<WarrantyMappingModel>();
+            // Create a list to hold the mapped data
+            var mappingModels = new List<WarrantyMappingModel>();
 
             foreach (var mapping in mappings)
             {
@@ -294,7 +305,7 @@ namespace Nop.Plugin.Misc.ProductWarranty.Areas.Admin.Controllers
                 if (product == null)
                     continue;
 
-                model.Add(new WarrantyMappingModel
+                mappingModels.Add(new WarrantyMappingModel
                 {
                     Id = mapping.Id,
                     ProductId = mapping.ProductId,
@@ -307,14 +318,19 @@ namespace Nop.Plugin.Misc.ProductWarranty.Areas.Admin.Controllers
                 });
             }
 
-            // Return in the format expected by DataTables
-            return Json(new
-            {
-                draw = 1,
-                recordsTotal = model.Count,
-                recordsFiltered = model.Count,
-                data = model
-            });
+            // Create paged list
+            var pagedList = new PagedList<WarrantyMappingModel>(
+                mappingModels,
+                searchModel.Page - 1,
+                searchModel.PageSize);
+
+            // Prepare model for the grid
+            var model = new WarrantyMappingListModel().PrepareToGrid(
+                searchModel,
+                pagedList,
+                () => pagedList);
+
+            return Json(model);
         }
 
         [HttpPost]

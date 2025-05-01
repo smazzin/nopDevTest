@@ -13,5 +13,6 @@ namespace Nop.Plugin.Misc.ProductWarranty.Areas.Admin.Models
 
         [NopResourceDisplayName("Plugins.Misc.ProductWarranty.WarrantyCategory.Fields.Name")]
         public string Name { get; set; }
+        public int Id { get; internal set; }
     }
 }
