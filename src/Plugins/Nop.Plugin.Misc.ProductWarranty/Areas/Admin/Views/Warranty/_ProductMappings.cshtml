@@ -1,0 +1,500 @@
+﻿@{
+	Layout = "_AdminLayout";
+}
+@model Nop.Plugin.Misc.ProductWarranty.Areas.Admin.Models.WarrantyCategoryModel
+@using Nop.Plugin.Misc.ProductWarranty.Areas.Admin.Models
+@using Nop.Web.Framework.Models.DataTables
+
+<div class="card card-default">
+	<div class="card-header">
+		@T("Plugins.Misc.ProductWarranty.WarrantyMapping.List")
+	</div>
+	<div class="card-body">
+		<p>
+			<button type="button" id="add-product-button" class="btn btn-primary">
+				<i class="fas fa-plus-square"></i>
+				@T("Plugins.Misc.ProductWarranty.WarrantyMapping.AddButton")
+			</button>
+		</p>
+
+		<!-- Products Grid -->
+		<table class="display" style="width:100%">
+			<thead>
+				<tr>
+					<th>Product</th>
+					<th>Notes</th>
+					<th>Order</th>
+					<th>Active</th>
+					<th>Edit</th>
+					<th>Delete</th>
+				</tr>
+			</thead>
+		</table>
+		@await Html.PartialAsync("Table", new Nop.Web.Framework.Models.DataTables.DataTablesModel
+		{
+			Name = "category-product-mappings-grid",
+			UrlRead = new DataUrl("CategoryProductMappingList", "Warranty", new Microsoft.AspNetCore.Routing.RouteValueDictionary { { "area", "Admin" } }),
+			Length = Model.PageSize,
+			LengthMenu = Model.AvailablePageSizes,
+			ColumnCollection = new List<ColumnProperty>
+			{
+				new ColumnProperty(nameof(WarrantyCategoryModel.ProductName))
+				{
+					Title = T("Plugins.Misc.ProductWarranty.WarrantyMapping.Fields.Product").Text,
+					Width = "200"
+				},
+				new ColumnProperty(nameof(WarrantyCategoryModel.Notes))
+				{
+					Title = T("Plugins.Misc.ProductWarranty.WarrantyMapping.Fields.Notes").Text,
+					Width = "300"
+				},
+				new ColumnProperty(nameof(WarrantyCategoryModel.DisplayOrder))
+				{
+					Title = T("Plugins.Misc.ProductWarranty.WarrantyMapping.Fields.DisplayOrder").Text,
+					Width = "100"
+				},
+				new ColumnProperty(nameof(WarrantyCategoryModel.IsActive))
+				{
+					Title = T("Plugins.Misc.ProductWarranty.WarrantyMapping.Fields.IsActive").Text,
+					ClassName = NopColumnClassDefaults.CenterAll,
+					Render = new RenderBoolean()
+				},
+				new ColumnProperty(nameof(WarrantyCategoryModel.Id))
+				{
+					ClassName = NopColumnClassDefaults.CenterAll,
+					Render = new RenderButton(T("Admin.Common.Edit"), "edit-warranty-mapping")
+				},
+				new ColumnProperty(nameof(WarrantyCategoryModel.Id))
+				{
+					ClassName = NopColumnClassDefaults.CenterAll,
+					Render = new RenderButton(T("Admin.Common.Delete"), "delete-warranty-mapping")
+				}
+			}
+		})
+	</div>
+</div>
+
+<!-- Edit Product Mapping Modal -->
+<div id="product-mapping-modal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="product-mapping-modal-title">
+	<div class="modal-dialog">
+		<div class="modal-content">
+			<div class="modal-header">
+				<h5 class="modal-title" id="product-mapping-modal-title">@T("Plugins.Misc.ProductWarranty.WarrantyMapping.EditMapping")</h5>
+				<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+					<span aria-hidden="true">&times;</span>
+				</button>
+			</div>
+			<div class="modal-body">
+				<input type="hidden" id="mapping-id" value="0" />
+				<input type="hidden" id="product-id" value="0" />
+
+				<div class="form-group row">
+					<div class="col-md-3">
+						<label for="product-name">@T("Plugins.Misc.ProductWarranty.WarrantyMapping.Fields.Product")</label>
+					</div>
+					<div class="col-md-9">
+						<div id="product-name" class="form-control-plaintext"></div>
+					</div>
+				</div>
+
+				<div class="form-group row">
+					<div class="col-md-3">
+						<label for="mapping-notes">@T("Plugins.Misc.ProductWarranty.WarrantyMapping.Fields.Notes")</label>
+					</div>
+					<div class="col-md-9">
+						<textarea id="mapping-notes" class="form-control"></textarea>
+					</div>
+				</div>
+
+				<div class="form-group row">
+					<div class="col-md-3">
+						<label for="mapping-display-order">@T("Plugins.Misc.ProductWarranty.WarrantyMapping.Fields.DisplayOrder")</label>
+					</div>
+					<div class="col-md-9">
+						<input type="number" id="mapping-display-order" class="form-control" value="1" />
+					</div>
+				</div>
+
+				<div class="form-group row">
+					<div class="col-md-3">
+						<label for="mapping-is-active">@T("Plugins.Misc.ProductWarranty.WarrantyMapping.Fields.IsActive")</label>
+					</div>
+					<div class="col-md-9">
+						<div class="onoffswitch">
+							<input type="checkbox" id="mapping-is-active" class="onoffswitch-checkbox" checked="checked" />
+							<label class="onoffswitch-label" for="mapping-is-active"></label>
+						</div>
+					</div>
+				</div>
+			</div>
+			<div class="modal-footer">
+				<button type="button" class="btn btn-secondary" data-dismiss="modal">@T("Admin.Common.Cancel")</button>
+				<button type="button" id="save-mapping-button" class="btn btn-primary">@T("Admin.Common.Save")</button>
+			</div>
+		</div>
+	</div>
+</div>
+
+<!-- Product Selection Modal -->
+<div id="select-product-modal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="select-product-modal-title">
+	<div class="modal-dialog modal-lg">
+		<div class="modal-content">
+			<div class="modal-header">
+				<h5 class="modal-title" id="select-product-modal-title">@T("Plugins.Misc.ProductWarranty.WarrantyMapping.SelectProducts")</h5>
+				<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+					<span aria-hidden="true">&times;</span>
+				</button>
+			</div>
+			<div class="modal-body">
+				<!-- Filters -->
+				<div class="form-group row">
+					<div class="col-md-3">
+						<label for="manufacturer-filter">@T("Admin.Catalog.Products.List.SearchManufacturer")</label>
+					</div>
+					<div class="col-md-9">
+						<select id="manufacturer-filter" class="form-control">
+							<option value="0">@T("Admin.Catalog.Products.List.SearchManufacturer.All")</option>
+							@{
+								// We'll populate this dynamically from JavaScript
+							}
+						</select>
+					</div>
+				</div>
+
+				<div class="form-group row">
+					<div class="col-md-3">
+						<label for="category-filter">@T("Admin.Catalog.Products.List.SearchCategory")</label>
+					</div>
+					<div class="col-md-9">
+						<select id="category-filter" class="form-control">
+							<option value="0">@T("Admin.Catalog.Products.List.SearchCategory.All")</option>
+							@{
+								// We'll populate this dynamically from JavaScript
+							}
+						</select>
+					</div>
+				</div>
+
+				<div class="form-group row">
+					<div class="col-md-9 offset-md-3">
+						<button type="button" id="search-products-button" class="btn btn-primary">
+							<i class="fas fa-search"></i>
+							@T("Admin.Common.Search")
+						</button>
+					</div>
+				</div>
+
+				<!-- Products Grid -->
+				<table id="products-grid" class="display" style="width:100%">
+					<thead>
+						<tr>
+							<th style="width:10%">
+								<input type="checkbox" id="select-all-products" />
+							</th>
+							<th>@T("Admin.Catalog.Products.Fields.Name")</th>
+							<th>@T("Admin.Catalog.Products.Fields.Sku")</th>
+							<th>@T("Admin.Catalog.Products.Fields.Price")</th>
+							<th>@T("Admin.Catalog.Products.Fields.Published")</th>
+						</tr>
+					</thead>
+				</table>
+			</div>
+			<div class="modal-footer">
+				<button type="button" class="btn btn-secondary" data-dismiss="modal">@T("Admin.Common.Cancel")</button>
+				<button type="button" id="save-selected-products-button" class="btn btn-primary">@T("Admin.Common.Save")</button>
+			</div>
+		</div>
+	</div>
+</div>
+
+<script>
+	$(document).ready(function() {
+		var categoryId = @Model.Id;
+
+		// Initialize the product mappings grid
+		var mappingsTable = $('#category-product-mappings-grid').DataTable({
+			"processing": true,
+			"serverSide": true,
+			"ajax": {
+				"url": "@Url.Action("CategoryProductMappingList", "Warranty")",
+				"type": "POST",
+				"data": function(d) {
+					d.categoryId = categoryId;
+					// Add anti-forgery token
+					d.__RequestVerificationToken = $('input[name=__RequestVerificationToken]').val();
+				}
+			},
+			"columns": [
+				{ "data": "ProductName" },
+				{ "data": "Notes" },
+				{ "data": "DisplayOrder" },
+				{
+					"data": "IsActive",
+					"render": function(data) {
+						return data ? '<span class="true-icon"></span>' : '<span class="false-icon"></span>';
+					}
+				},
+				{
+					"data": "Id",
+					"render": function(data, type, row) {
+						return '<button type="button" class="btn btn-default edit-warranty-mapping" data-id="' + data + '"><i class="fas fa-pencil-alt"></i>Edit</button>';
+					}
+				},
+				{
+					"data": "Id",
+					"render": function(data, type, row) {
+						return '<button type="button" class="btn btn-default delete-warranty-mapping" data-id="' + data + '"><i class="fas fa-trash-alt"></i>Delete</button>';
+					}
+				}
+			]
+		});
+
+		// Load manufacturers for filter
+		$.ajax({
+			url: '@Url.Action("GetManufacturers", "Product", new { area = "Admin" })',
+			type: 'GET',
+			success: function(data) {
+				var html = '<option value="0">@T("Admin.Catalog.Products.List.SearchManufacturer.All")</option>';
+				$.each(data, function(index, manufacturer) {
+					html += '<option value="' + manufacturer.Id + '">' + manufacturer.Name + '</option>';
+				});
+				$('#manufacturer-filter').html(html);
+			}
+		});
+
+		// Load categories for filter
+		$.ajax({
+			url: '@Url.Action("GetCategories", "Category", new { area = "Admin" })',
+			type: 'GET',
+			success: function(data) {
+				var html = '<option value="0">@T("Admin.Catalog.Products.List.SearchCategory.All")</option>';
+				$.each(data, function(index, category) {
+					html += '<option value="' + category.Id + '">' + category.Name + '</option>';
+				});
+				$('#category-filter').html(html);
+			}
+		});
+
+		// Initialize the products grid
+		var productsTable = $('#products-grid').DataTable({
+			"processing": true,
+			"serverSide": false,
+			"paging": true,
+			"info": true,
+			"data": [],
+			"columns": [
+				{
+					"data": null,
+					"render": function(data, type, row) {
+						return '<input type="checkbox" class="product-checkbox" data-id="' + row.Id + '"' + (row.Selected ? ' checked="checked"' : '') + ' />';
+					}
+				},
+				{ "data": "Name" },
+				{ "data": "Sku" },
+				{ "data": "Price" },
+				{
+					"data": "Published",
+					"render": function(data) {
+						return data ? '<span class="true-icon"></span>' : '<span class="false-icon"></span>';
+					}
+				}
+			]
+		});
+
+		// Select all products checkbox
+		$('#select-all-products').click(function() {
+			$('.product-checkbox').prop('checked', this.checked);
+		});
+
+		// Open product selection modal
+		$('#add-product-button').click(function() {
+			// Reset filters
+			$('#manufacturer-filter').val(0);
+			$('#category-filter').val(0);
+
+			// Load products
+			loadProducts();
+
+			// Show modal
+			$('#select-product-modal').modal('show');
+		});
+
+		// Search products button click
+		$('#search-products-button').click(function() {
+			loadProducts();
+		});
+
+		// Load products based on filters
+		function loadProducts() {
+			var manufacturerId = $('#manufacturer-filter').val();
+			var categoryId = $('#category-filter').val();
+
+			$.ajax({
+				url: '@Url.Action("GetFilteredProductsForMapping", "Warranty")',
+				type: 'POST',
+				data: {
+					categoryId: @Model.Id,
+					manufacturerId: manufacturerId,
+					productCategoryId: categoryId,
+					__RequestVerificationToken: $('input[name=__RequestVerificationToken]').val()
+				},
+				success: function(data) {
+					productsTable.clear().rows.add(data.Data).draw();
+
+					// Check the "select all" checkbox if all products are selected
+					var allSelected = $('.product-checkbox:not(:checked)').length === 0;
+					$('#select-all-products').prop('checked', allSelected);
+				}
+			});
+		}
+
+		// Save selected products
+		$('#save-selected-products-button').click(function() {
+			// Get all selected product IDs (checked checkboxes)
+			var selectedProducts = [];
+			$('.product-checkbox:checked').each(function() {
+				selectedProducts.push($(this).data('id'));
+			});
+
+			if (selectedProducts.length === 0) {
+				alert('Please select at least one product');
+				return;
+			}
+
+			// Show loading spinner or disable button
+			$(this).prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Saving...');
+
+			// Save the mappings
+			$.ajax({
+				url: '@Url.Action("AddProductsToWarrantyCategory", "Warranty")',
+				type: 'POST',
+				data: {
+					categoryId: categoryId,
+					productIds: selectedProducts,
+					__RequestVerificationToken: $('input[name=__RequestVerificationToken]').val()
+				},
+				traditional: true, // Important for arrays!
+				success: function(data) {
+					if (data.Success) {
+						// Close modal
+						$('#select-product-modal').modal('hide');
+
+						// Refresh mappings grid
+						mappingsTable.ajax.reload();
+
+						// Show success message
+						displayNotification(data.Message, 'success');
+					} else {
+						// Show error message
+						displayNotification(data.Message, 'error');
+					}
+
+					// Re-enable button
+					$('#save-selected-products-button').prop('disabled', false).html('Save');
+				},
+				error: function(xhr) {
+					// Show error message
+					displayNotification('Error saving products', 'error');
+					console.log(xhr.responseText);
+
+					// Re-enable button
+					$('#save-selected-products-button').prop('disabled', false).html('Save');
+				}
+			});
+		});
+
+		// Edit mapping
+		$(document).on('click', '.edit-warranty-mapping', function() {
+			var id = $(this).data('id');
+			var row = $(this).closest('tr');
+			var data = mappingsTable.row(row).data();
+
+			// Fill the modal
+			$('#mapping-id').val(data.Id);
+			$('#product-id').val(data.ProductId);
+			$('#product-name').text(data.ProductName);
+			$('#mapping-notes').val(data.Notes);
+			$('#mapping-display-order').val(data.DisplayOrder);
+			$('#mapping-is-active').prop('checked', data.IsActive);
+
+			// Show the modal
+			$('#product-mapping-modal').modal('show');
+		});
+
+		// Save mapping
+		$('#save-mapping-button').click(function() {
+			var mappingId = $('#mapping-id').val();
+			var updateData = {
+				Id: mappingId,
+				ProductId: $('#product-id').val(),
+				WarrantyCategoryId: categoryId,
+				Notes: $('#mapping-notes').val(),
+				DisplayOrder: $('#mapping-display-order').val(),
+				IsActive: $('#mapping-is-active').is(':checked')
+			};
+
+			// Add anti-forgery token
+			updateData.__RequestVerificationToken = $('input[name=__RequestVerificationToken]').val();
+
+			$.ajax({
+				cache: false,
+				type: "POST",
+				url: "@Url.Action("UpdateProductWarrantyMapping", "Warranty")",
+				data: updateData,
+				success: function(data) {
+					if (data.Result) {
+						// Close modal
+						$('#product-mapping-modal').modal('hide');
+
+						// Refresh grid
+						mappingsTable.ajax.reload();
+
+						// Show success message
+						display_nop_success('@T("Plugins.Misc.ProductWarranty.WarrantyMapping.Updated")');
+					} else {
+						// Display errors
+						display_nop_error(data);
+					}
+				},
+				error: function(xhr) {
+					alert('Failed to update mapping.');
+					console.log(xhr.responseText);
+				}
+			});
+		});
+
+		// Delete mapping
+		$(document).on('click', '.delete-warranty-mapping', function() {
+			if (confirm('@T("Admin.Common.AreYouSure")')) {
+				var id = $(this).data('id');
+				var deleteData = {
+					id: id,
+					__RequestVerificationToken: $('input[name=__RequestVerificationToken]').val()
+				};
+
+				$.ajax({
+					cache: false,
+					type: "POST",
+					url: "@Url.Action("DeleteProductWarrantyMapping", "Warranty")",
+					data: deleteData,
+					success: function(data) {
+						if (data.Result) {
+							// Refresh grid
+							mappingsTable.ajax.reload();
+
+							// Show success message
+							display_nop_success('@T("Plugins.Misc.ProductWarranty.WarrantyMapping.Deleted")');
+						} else {
+							// Display errors
+							display_nop_error(data);
+						}
+					},
+					error: function(xhr) {
+						alert('Failed to delete mapping.');
+						console.log(xhr.responseText);
+					}
+				});
+			}
+		});
+	});
+</script>

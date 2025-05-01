@@ -127,6 +127,7 @@ namespace Nop.Plugin.Misc.ProductWarranty
                 ["Plugins.Misc.ProductWarranty.WarrantyMapping.Fields.DisplayOrder"] = "Display order",
                 ["Plugins.Misc.ProductWarranty.WarrantyMapping.Fields.IsActive"] = "Is active",
                 ["Plugins.Misc.ProductWarranty.WarrantyMapping.Fields.Notes"] = "Notes",
+                ["Plugins.Misc.ProductWarranty.WarrantyMapping.ProductsUpdated"] = "Product warranty mappings have been updated successfully.",
 
                 // Public
                 ["Plugins.Misc.ProductWarranty.Public.Title"] = "Warranty Information",

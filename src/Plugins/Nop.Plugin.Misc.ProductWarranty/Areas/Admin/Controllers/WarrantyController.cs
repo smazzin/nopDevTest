@@ -30,6 +30,8 @@ namespace Nop.Plugin.Misc.ProductWarranty.Areas.Admin.Controllers
         private readonly ILocalizationService _localizationService;
         private readonly INotificationService _notificationService;
         private readonly IProductService _productService;
+        private readonly IManufacturerService _manufacturerService;
+        private readonly ICategoryService _categoryService;
 
         #endregion
 
@@ -42,7 +44,9 @@ namespace Nop.Plugin.Misc.ProductWarranty.Areas.Admin.Controllers
             IPermissionService permissionService,
             ILocalizationService localizationService,
             INotificationService notificationService,
-            IProductService productService)
+            IProductService productService,
+            IManufacturerService manufacturerService,
+            ICategoryService categoryService)
         {
             _warrantyService = warrantyService;
             _settingService = settingService;
@@ -51,6 +55,8 @@ namespace Nop.Plugin.Misc.ProductWarranty.Areas.Admin.Controllers
             _localizationService = localizationService;
             _notificationService = notificationService;
             _productService = productService;
+            _manufacturerService = manufacturerService;
+            _categoryService = categoryService;
         }
 
         #endregion
@@ -249,6 +255,8 @@ namespace Nop.Plugin.Misc.ProductWarranty.Areas.Admin.Controllers
         public async Task<IActionResult> EditCategory(int id)
         {
             var category = await _warrantyService.GetWarrantyCategoryByIdAsync(id);
+            if (category == null)
+                return RedirectToAction("Categories");
 
             var model = new WarrantyCategoryModel
             {
@@ -259,10 +267,171 @@ namespace Nop.Plugin.Misc.ProductWarranty.Areas.Admin.Controllers
                 DisplayOrder = category.DisplayOrder,
                 Published = category.Published,
                 CreatedOn = category.CreatedOnUtc,
-                UpdatedOn = category.UpdatedOnUtc
+                UpdatedOn = category.UpdatedOnUtc,
+                // Add available products for mappings
+                AvailableProducts = await PrepareProductsAsync()
             };
 
             return View("~/Plugins/Misc.ProductWarranty/Areas/Admin/Views/Warranty/EditCategory.cshtml", model);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> CategoryProductMappingList(int categoryId)
+        {
+            // Get the category first
+            var category = await _warrantyService.GetWarrantyCategoryByIdAsync(categoryId);
+            if (category == null)
+                return Json(new { Result = false, Error = "Category not found" });
+
+            // Get mappings for this category
+            var mappings = await _warrantyService.GetProductWarrantyMappingsByCategoryIdAsync(categoryId);
+
+            var model = new List<WarrantyMappingModel>();
+
+            foreach (var mapping in mappings)
+            {
+                var product = await _productService.GetProductByIdAsync(mapping.ProductId);
+                if (product == null)
+                    continue;
+
+                model.Add(new WarrantyMappingModel
+                {
+                    Id = mapping.Id,
+                    ProductId = mapping.ProductId,
+                    ProductName = product.Name,
+                    WarrantyCategoryId = mapping.WarrantyCategoryId,
+                    WarrantyCategoryName = category.Name,
+                    DisplayOrder = mapping.DisplayOrder,
+                    IsActive = mapping.IsActive,
+                    Notes = mapping.Notes
+                });
+            }
+
+            // Return in the format expected by DataTables
+            return Json(new
+            {
+                draw = 1,
+                recordsTotal = model.Count,
+                recordsFiltered = model.Count,
+                data = model
+            });
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> AddCategoryProductMapping(WarrantyMappingModel model)
+        {
+            if (ModelState.IsValid)
+            {
+                var mapping = new ProductWarrantyMappingRecord
+                {
+                    ProductId = model.ProductId,
+                    WarrantyCategoryId = model.WarrantyCategoryId,
+                    DisplayOrder = model.DisplayOrder,
+                    IsActive = model.IsActive,
+                    Notes = model.Notes
+                };
+
+                await _warrantyService.InsertProductWarrantyMappingAsync(mapping);
+
+                _notificationService.SuccessNotification(await _localizationService.GetResourceAsync("Plugins.Misc.ProductWarranty.WarrantyMapping.Added"));
+
+                return Json(new { Result = true });
+            }
+
+            return Json(new { Result = false, Errors = ModelState.Values.SelectMany(v => v.Errors.Select(e => e.ErrorMessage)).ToList() });
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> GetFilteredProductsForMapping(int categoryId, int manufacturerId = 0, int productCategoryId = 0)
+        {
+            // Get products based on filters
+            var products = await _productService.SearchProductsAsync(
+                manufacturerIds: manufacturerId > 0 ? new List<int> { manufacturerId } : null,
+                categoryIds: productCategoryId > 0 ? new List<int> { productCategoryId } : null,
+                showHidden: true,
+                pageSize: int.MaxValue);
+
+            // Get existing mappings for this category to mark as selected
+            var existingMappings = await _warrantyService.GetProductWarrantyMappingsByCategoryIdAsync(categoryId);
+            var existingProductIds = existingMappings.Select(m => m.ProductId).ToList();
+
+            // Prepare model
+            var model = products.Select(p => new
+            {
+                Id = p.Id,
+                Name = p.Name,
+                Sku = p.Sku,
+                Price = p.Price,
+                Published = p.Published,
+                Selected = existingProductIds.Contains(p.Id)
+            }).ToList();
+
+            return Json(new { Data = model });
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> AddProductsToWarrantyCategory(int categoryId, [FromForm] List<int> productIds)
+        {
+            try
+            {
+                if (productIds == null || !productIds.Any())
+                    return Json(new { Success = false, Message = "No products selected" });
+
+                // Get existing mappings to avoid duplicates
+                var existingMappings = await _warrantyService.GetProductWarrantyMappingsByCategoryIdAsync(categoryId);
+                var existingProductIds = existingMappings.Select(m => m.ProductId).ToList();
+
+                // Add new mappings
+                var newProductIds = productIds.Except(existingProductIds).ToList();
+                foreach (var productId in newProductIds)
+                {
+                    var mapping = new ProductWarrantyMappingRecord
+                    {
+                        ProductId = productId,
+                        WarrantyCategoryId = categoryId,
+                        DisplayOrder = 1,
+                        IsActive = true
+                    };
+
+                    await _warrantyService.InsertProductWarrantyMappingAsync(mapping);
+                }
+
+                // Remove mappings that were unchecked
+                var removedProductIds = existingProductIds.Except(productIds).ToList();
+                foreach (var productId in removedProductIds)
+                {
+                    var mapping = existingMappings.FirstOrDefault(m => m.ProductId == productId);
+                    if (mapping != null)
+                        await _warrantyService.DeleteProductWarrantyMappingAsync(mapping);
+                }
+
+                return Json(new
+                {
+                    Success = true,
+                    Message = await _localizationService.GetResourceAsync("Plugins.Misc.ProductWarranty.WarrantyMapping.ProductsUpdated")
+                });
+            }
+            catch (Exception ex)
+            {
+                // Log exception
+                return Json(new { Success = false, Message = ex.Message });
+            }
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GetManufacturers()
+        {
+            var manufacturers = await _manufacturerService.GetAllManufacturersAsync(showHidden: true);
+            var model = manufacturers.Select(m => new { Id = m.Id, Name = m.Name }).ToList();
+            return Json(model);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GetCategories()
+        {
+            var categories = await _categoryService.GetAllCategoriesAsync(showHidden: true);
+            var model = categories.Select(c => new { Id = c.Id, Name = c.Name }).ToList();
+            return Json(model);
         }
 
         [HttpPost, ParameterBasedOnFormName("save-continue", "continueEditing")]

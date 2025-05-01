@@ -1,34 +1,46 @@
-﻿@* EditCategory.cshtml *@
-@model Nop.Plugin.Misc.ProductWarranty.Areas.Admin.Models.WarrantyCategoryModel
+﻿@model Nop.Plugin.Misc.ProductWarranty.Areas.Admin.Models.WarrantyCategoryModel
 @{
-    Layout = "_AdminLayout";
-    ViewBag.Title = T("Plugins.Misc.ProductWarranty.WarrantyCategory.Edit").Text;
+	Layout = "_AdminLayout";
+	ViewBag.Title = T("Plugins.Misc.ProductWarranty.WarrantyCategory.Edit").Text;
 }
 
 <form asp-controller="Warranty" asp-action="EditCategory" method="post">
-    <div class="content-header clearfix">
-        <h1 class="float-left">
-            @T("Plugins.Misc.ProductWarranty.WarrantyCategory.Edit") - @Model.Name 
-            <small>
-                <i class="fas fa-arrow-circle-left"></i>
-                <a asp-action="Categories">@T("Plugins.Misc.ProductWarranty.WarrantyCategory.BackToList")</a>
-            </small>
-        </h1>
-        <div class="float-right">
-            <button type="submit" name="save" class="btn btn-primary">
-                <i class="far fa-save"></i>
-                @T("Admin.Common.Save")
-            </button>
-            <button type="submit" name="save-continue" class="btn btn-primary">
-                <i class="far fa-save"></i>
-                @T("Admin.Common.SaveContinue")
-            </button>
-            <span id="warranty-delete" class="btn btn-danger">
-                <i class="far fa-trash-alt"></i>
-                @T("Admin.Common.Delete")
-            </span>
-        </div>
-    </div>
-	@await Html.PartialAsync("~/Plugins/Misc.ProductWarranty/Areas/Admin/Views/Warranty/_CreateOrUpdateCategory.cshtml", Model)
+	<div class="content-header clearfix">
+		<h1 class="float-left">
+			@T("Plugins.Misc.ProductWarranty.WarrantyCategory.Edit") - @Model.Name
+			<small>
+				<i class="fas fa-arrow-circle-left"></i>
+				<a asp-action="Categories">@T("Plugins.Misc.ProductWarranty.WarrantyCategory.BackToList")</a>
+			</small>
+		</h1>
+		<div class="float-right">
+			<button type="submit" name="save" class="btn btn-primary">
+				<i class="far fa-save"></i>
+				@T("Admin.Common.Save")
+			</button>
+			<button type="submit" name="save-continue" class="btn btn-primary">
+				<i class="far fa-save"></i>
+				@T("Admin.Common.SaveContinue")
+			</button>
+			<span id="warranty-delete" class="btn btn-danger">
+				<i class="far fa-trash-alt"></i>
+				@T("Admin.Common.Delete")
+			</span>
+		</div>
+	</div>
+
+	<div class="content">
+		<div class="form-horizontal">
+			<nop-tabs id="warranty-tabs">
+				<nop-tab asp-name="tab-info" asp-title="@T("Plugins.Misc.ProductWarranty.WarrantyCategory.Edit")" asp-default="true">
+					@await Html.PartialAsync("~/Plugins/Misc.ProductWarranty/Areas/Admin/Views/Warranty/_CreateOrUpdateCategory.cshtml", Model)
+				</nop-tab>
+				<nop-tab asp-name="tab-products" asp-title="@T("Admin.Catalog.Products")">
+					@await Html.PartialAsync("~/Plugins/Misc.ProductWarranty/Areas/Admin/Views/Warranty/_ProductMappings.cshtml", Model)
+				</nop-tab>
+			</nop-tabs>
+		</div>
+	</div>
 </form>
+
 <nop-delete-confirmation asp-model-id="@Model.Id" asp-action="DeleteCategory" />

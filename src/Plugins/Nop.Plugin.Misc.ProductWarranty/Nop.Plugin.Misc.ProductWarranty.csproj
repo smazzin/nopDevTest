@@ -50,6 +50,9 @@
     <None Update="Areas\Admin\Views\Warranty\ProductWarrantyMappings.cshtml">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+    <None Update="Areas\Admin\Views\Warranty\_ProductMappings.cshtml">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Update="Areas\Admin\Views\Warranty\_CreateOrUpdateCategory.cshtml">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>

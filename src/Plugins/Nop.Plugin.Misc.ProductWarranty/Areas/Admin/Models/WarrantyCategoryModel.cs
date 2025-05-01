@@ -1,6 +1,7 @@
 ﻿// WarrantyCategoryModel.cs
 using System;
 using System.ComponentModel.DataAnnotations;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using Nop.Web.Framework.Models;
 using Nop.Web.Framework.Mvc.ModelBinding;
 
@@ -11,6 +12,12 @@ namespace Nop.Plugin.Misc.ProductWarranty.Areas.Admin.Models
     /// </summary>
     public record WarrantyCategoryModel : BaseNopEntityModel
     {
+        public WarrantyCategoryModel()
+        {
+            AvailableProducts = new List<SelectListItem>();
+        }
+
+        // Existing properties...
         [NopResourceDisplayName("Plugins.Misc.ProductWarranty.WarrantyCategory.Fields.Name")]
         public string Name { get; set; }
 
@@ -31,5 +38,17 @@ namespace Nop.Plugin.Misc.ProductWarranty.Areas.Admin.Models
 
         [NopResourceDisplayName("Plugins.Misc.ProductWarranty.WarrantyCategory.Fields.UpdatedOn")]
         public DateTime UpdatedOn { get; set; }
+
+        // Add these new properties
+        [NopResourceDisplayName("Plugins.Misc.ProductWarranty.WarrantyMapping.Fields.Product")]
+        public int ProductId { get; set; }
+
+        [NopResourceDisplayName("Plugins.Misc.ProductWarranty.WarrantyMapping.Fields.Notes")]
+        public string Notes { get; set; }
+
+        [NopResourceDisplayName("Plugins.Misc.ProductWarranty.WarrantyMapping.Fields.IsActive")]
+        public bool IsActive { get; set; }
+
+        public IList<SelectListItem> AvailableProducts { get; set; }
     }
 }
