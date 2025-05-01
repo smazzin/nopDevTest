@@ -278,14 +278,35 @@ namespace Nop.Plugin.Misc.ProductWarranty.Areas.Admin.Controllers
         [HttpPost]
         public async Task<IActionResult> CategoryProductMappingList(WarrantyCategorySearchModel searchModel)
         {
-            // Get the category id from the request
-            int categoryId = searchModel.Id > 0 ? searchModel.Id : 0;
+            // Get the category id from various possible sources
+            int categoryId = 0;
 
+            // Check if it's in the route values first
+            if (Request.RouteValues.ContainsKey("categoryId") && int.TryParse(Request.RouteValues["categoryId"].ToString(), out int routeId))
+            {
+                categoryId = routeId;
+            }
+            // Then check query string
+            else if (Request.Query.ContainsKey("categoryId") && int.TryParse(Request.Query["categoryId"], out int queryId))
+            {
+                categoryId = queryId;
+            }
+            // Then check if it's in the search model
+            else if (searchModel != null && searchModel.Id > 0)
+            {
+                categoryId = searchModel.Id;
+            }
+            // Finally check form data
+            else if (Request.HasFormContentType && Request.Form.ContainsKey("categoryId") &&
+                     int.TryParse(Request.Form["categoryId"], out int formId))
+            {
+                categoryId = formId;
+            }
+
+            // Verify we have a valid category ID
             if (categoryId == 0)
             {
-                // Try to get it from the request if not found in model
-                if (!int.TryParse(Request.Form["categoryId"], out categoryId) || categoryId == 0)
-                    return Json(new { Result = false, Error = "Category ID not provided" });
+                return Json(new { Result = false, Error = "Category ID not provided" });
             }
 
             // Get the category
