@@ -1,0 +1,186 @@
+﻿@model Nop.Web.Areas.Admin.Models.Catalog.ProductSearchModel
+@{
+	Layout = "_AdminPopupLayout";
+
+	//page title
+	ViewBag.PageTitle = T("Plugins.Misc.ProductWarranty.WarrantyMapping.AddProducts").Text;
+}
+
+@if (ViewBag.RefreshPage == true)
+{
+	<script>
+		try {window.opener.document.forms['@(Context.Request.Query["formId"])'].@(Context.Request.Query["btnId"]).click();}
+		catch (e){}
+		window.close();
+	</script>
+}
+else
+{
+	<form asp-controller="Warranty" asp-action="ProductAddPopup"
+		  asp-route-categoryId="@ViewBag.CategoryId"
+		  asp-route-btnId="@Context.Request.Query["btnId"]"
+		  asp-route-formId="@Context.Request.Query["formId"]">
+		<input type="hidden" name="categoryId" value="@ViewBag.CategoryId" />
+		<div class="content-header clearfix">
+			<h1 class="float-left">
+				@T("Plugins.Misc.ProductWarranty.WarrantyMapping.AddProducts")
+			</h1>
+			<div class="float-right">
+				&nbsp;
+			</div>
+		</div>
+		<section class="content">
+			<div class="container-fluid">
+				<div class="form-horizontal">
+					<div class="cards-group">
+						<div class="card card-default card-search">
+							<div class="card-body">
+								<div class="row search-row">
+									<div class="col-md-6">
+										<div class="form-group row">
+											<div class="col-md-4">
+												<nop-label asp-for="SearchProductName" />
+											</div>
+											<div class="col-md-8">
+												<nop-editor asp-for="SearchProductName" />
+											</div>
+										</div>
+										<div class="form-group row" @(Model.AvailableCategories.SelectionIsNotPossible() ? Html.Raw("style=\"display:none\"") : null)>
+											<div class="col-md-4">
+												<nop-label asp-for="SearchCategoryId" />
+											</div>
+											<div class="col-md-8">
+												<nop-select asp-for="SearchCategoryId" asp-items="Model.AvailableCategories" />
+											</div>
+										</div>
+										<div class="form-group row" @(Model.AvailableVendors.SelectionIsNotPossible() ? Html.Raw("style=\"display:none\"") : null)>
+											<div class="col-md-4">
+												<nop-label asp-for="SearchVendorId" />
+											</div>
+											<div class="col-md-8">
+												<nop-select asp-for="SearchVendorId" asp-items="Model.AvailableVendors" />
+											</div>
+										</div>
+									</div>
+									<div class="col-md-6">
+										<div class="form-group row" @(Model.AvailableStores.SelectionIsNotPossible() ? Html.Raw("style=\"display:none\"") : null)>
+											<div class="col-md-4">
+												<nop-label asp-for="SearchStoreId" />
+											</div>
+											<div class="col-md-8">
+												<nop-select asp-for="SearchStoreId" asp-items="Model.AvailableStores" />
+											</div>
+										</div>
+										<div class="form-group row">
+											<div class="col-md-4">
+												<nop-label asp-for="SearchProductTypeId" />
+											</div>
+											<div class="col-md-8">
+												<nop-select asp-for="SearchProductTypeId" asp-items="Model.AvailableProductTypes" />
+											</div>
+										</div>
+										<div class="form-group row" @(Model.AvailableManufacturers.SelectionIsNotPossible() ? Html.Raw("style=\"display:none\"") : null)>
+											<div class="col-md-4">
+												<nop-label asp-for="SearchManufacturerId" />
+											</div>
+											<div class="col-md-8">
+												<nop-select asp-for="SearchManufacturerId" asp-items="Model.AvailableManufacturers" />
+											</div>
+										</div>
+									</div>
+								</div>
+								<div class="row">
+									<div class="col-md-12">
+										<button type="button" id="search-products" class="btn btn-primary btn-search">
+											<i class="fas fa-search"></i>
+											@T("Admin.Common.Search")
+										</button>
+									</div>
+								</div>
+							</div>
+						</div>
+
+						<div class="card card-default">
+							<div class="card-body">
+								@await Html.PartialAsync("Table", new DataTablesModel
+  {
+	  Name = "products-grid",
+	  UrlRead = new DataUrl("ProductAddPopupList", "Warranty", null),
+	  SearchButtonId = "search-products",
+	  Length = Model.PageSize,
+	  LengthMenu = Model.AvailablePageSizes,
+	  Filters = new List<FilterParameter>
+							{
+							new FilterParameter(nameof(Model.SearchProductName)),
+							new FilterParameter(nameof(Model.SearchCategoryId)),
+							new FilterParameter(nameof(Model.SearchManufacturerId)),
+							new FilterParameter(nameof(Model.SearchStoreId)),
+							new FilterParameter(nameof(Model.SearchVendorId)),
+							new FilterParameter(nameof(Model.SearchProductTypeId))
+							},
+	  ColumnCollection = new List<ColumnProperty>
+							{
+							new ColumnProperty(nameof(Nop.Web.Areas.Admin.Models.Catalog.ProductModel.Id))
+							{
+							IsMasterCheckBox = true,
+							Render = new RenderCheckBox("selectedIds"),
+							ClassName = NopColumnClassDefaults.CenterAll,
+							Width = "50"
+							},
+							new ColumnProperty(nameof(Nop.Web.Areas.Admin.Models.Catalog.ProductModel.Name))
+							{
+							Title = T("Admin.Catalog.Products.Fields.Name").Text
+							},
+							new ColumnProperty(nameof(Nop.Web.Areas.Admin.Models.Catalog.ProductModel.Published))
+							{
+							Title = T("Admin.Catalog.Products.Fields.Published").Text,
+							Width = "100",
+							ClassName = NopColumnClassDefaults.CenterAll,
+							Render = new RenderBoolean()
+							}
+							}
+  })
+							</div>
+							<div class="card-footer">
+								<button type="submit" name="save" class="btn btn-primary">
+									<i class="far fa-save"></i>
+									@T("Admin.Common.Save")
+								</button>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</section>
+	</form>
+}
+<script>
+	$(document).ready(function () {
+		$('button[name="save"]').click(function (e) {
+			e.preventDefault();
+
+			// Get all checked checkboxes
+			var selectedIds = [];
+			$('input[name="selectedIds"]:checked').each(function () {
+				selectedIds.push($(this).val());
+			});
+
+			// If no products selected, show error
+			if (selectedIds.length === 0) {
+				alert('Please select at least one product');
+				return;
+			}
+
+			// Add selected IDs to a hidden input
+			if ($('#selected-products-ids').length === 0) {
+				$('form').append('<input type="hidden" id="selected-products-ids" name="selectedIds" />');
+			}
+
+			// Set the value
+			$('#selected-products-ids').val(selectedIds.join(','));
+
+			// Submit the form
+			$('form').submit();
+		});
+	});
+</script>

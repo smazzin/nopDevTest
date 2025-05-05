@@ -4,7 +4,7 @@
 	ViewBag.Title = T("Plugins.Misc.ProductWarranty.WarrantyCategory.Edit").Text;
 }
 
-<form asp-controller="Warranty" asp-action="EditCategory" method="post">
+<form asp-controller="Warranty" asp-action="EditCategory" method="post" id="warranty-category-form">
 	<div class="content-header clearfix">
 		<h1 class="float-left">
 			@T("Plugins.Misc.ProductWarranty.WarrantyCategory.Edit") - @Model.Name

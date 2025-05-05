@@ -15,6 +15,7 @@ namespace Nop.Plugin.Misc.ProductWarranty.Areas.Admin.Models
         public WarrantyCategoryModel()
         {
             AvailableProducts = new List<SelectListItem>();
+            WarrantySearchModel = new WarrantyCategorySearchModel();
         }
 
         // Existing properties...
@@ -50,5 +51,6 @@ namespace Nop.Plugin.Misc.ProductWarranty.Areas.Admin.Models
         public bool IsActive { get; set; }
 
         public IList<SelectListItem> AvailableProducts { get; set; }
+        public WarrantyCategorySearchModel WarrantySearchModel { get; }
     }
 }

@@ -1,6 +1,8 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Nop.Core;
+using Nop.Core.Domain.Catalog;
 using Nop.Plugin.Misc.ProductWarranty.Areas.Admin.Models;
 using Nop.Plugin.Misc.ProductWarranty.Domain;
 using Nop.Plugin.Misc.ProductWarranty.Services;
@@ -9,6 +11,8 @@ using Nop.Services.Configuration;
 using Nop.Services.Localization;
 using Nop.Services.Messages;
 using Nop.Services.Security;
+using Nop.Web.Areas.Admin.Factories;
+using Nop.Web.Areas.Admin.Models.Catalog;
 using Nop.Web.Framework;
 using Nop.Web.Framework.Controllers;
 using Nop.Web.Framework.Models.Extensions;
@@ -32,6 +36,7 @@ namespace Nop.Plugin.Misc.ProductWarranty.Areas.Admin.Controllers
         private readonly IProductService _productService;
         private readonly IManufacturerService _manufacturerService;
         private readonly ICategoryService _categoryService;
+        private readonly IProductModelFactory _productModelFactory;
 
         #endregion
 
@@ -46,7 +51,8 @@ namespace Nop.Plugin.Misc.ProductWarranty.Areas.Admin.Controllers
             INotificationService notificationService,
             IProductService productService,
             IManufacturerService manufacturerService,
-            ICategoryService categoryService)
+            ICategoryService categoryService,
+            IProductModelFactory productModelFactory)
         {
             _warrantyService = warrantyService;
             _settingService = settingService;
@@ -272,6 +278,9 @@ namespace Nop.Plugin.Misc.ProductWarranty.Areas.Admin.Controllers
                 AvailableProducts = await PrepareProductsAsync()
             };
 
+            //WarrantySearchModel = new WarrantyCategorySearchModel();
+            model.WarrantySearchModel.SetGridPageSize();
+
             return View("~/Plugins/Misc.ProductWarranty/Areas/Admin/Views/Warranty/EditCategory.cshtml", model);
         }
 
@@ -406,20 +415,192 @@ namespace Nop.Plugin.Misc.ProductWarranty.Areas.Admin.Controllers
             return Json(new { Data = model });
         }
 
-        [HttpPost]
-        public async Task<IActionResult> AddProductsToWarrantyCategory(int categoryId, [FromForm] List<int> productIds)
-        {
-            try
-            {
-                if (productIds == null || !productIds.Any())
-                    return Json(new { Success = false, Message = "No products selected" });
+        //[HttpPost]
+        //public async Task<IActionResult> AddProductsToWarrantyCategory(int categoryId, string productIdsString)
+        //{
+        //    try
+        //    {
+        //        if (string.IsNullOrEmpty(productIdsString))
+        //            return Json(new { Success = false, Message = "No products selected" });
 
-                // Get existing mappings to avoid duplicates
+        //        System.Diagnostics.Debug.WriteLine($"Received category ID: {categoryId}");
+        //        System.Diagnostics.Debug.WriteLine($"Received product IDs string: {productIdsString}");
+
+        //        // Convert comma-separated string to list of integers
+        //        var productIds = productIdsString.Split(',')
+        //            .Select(id => int.TryParse(id, out int parsedId) ? parsedId : 0)
+        //            .Where(id => id > 0)
+        //            .ToList();
+
+        //        if (!productIds.Any())
+        //            return Json(new { Success = false, Message = "Invalid product IDs" });
+
+        //        System.Diagnostics.Debug.WriteLine($"Parsed product IDs: {string.Join(", ", productIds)}");
+
+        //        // Get existing mappings to avoid duplicates
+        //        var existingMappings = await _warrantyService.GetProductWarrantyMappingsByCategoryIdAsync(categoryId);
+        //        var existingProductIds = existingMappings.Select(m => m.ProductId).ToList();
+
+        //        // Add new mappings
+        //        var newProductIds = productIds.Except(existingProductIds).ToList();
+        //        int addedCount = 0;
+
+        //        foreach (var productId in newProductIds)
+        //        {
+        //            var mapping = new ProductWarrantyMappingRecord
+        //            {
+        //                ProductId = productId,
+        //                WarrantyCategoryId = categoryId,
+        //                DisplayOrder = 1,
+        //                IsActive = true
+        //            };
+
+        //            await _warrantyService.InsertProductWarrantyMappingAsync(mapping);
+        //            addedCount++;
+        //        }
+
+        //        // Remove mappings that were unchecked
+        //        var removedProductIds = existingProductIds.Except(productIds).ToList();
+        //        int removedCount = 0;
+
+        //        foreach (var productId in removedProductIds)
+        //        {
+        //            var mapping = existingMappings.FirstOrDefault(m => m.ProductId == productId);
+        //            if (mapping != null)
+        //            {
+        //                await _warrantyService.DeleteProductWarrantyMappingAsync(mapping);
+        //                removedCount++;
+        //            }
+        //        }
+
+        //        string message = $"{addedCount} products added and {removedCount} products removed successfully";
+        //        return Json(new
+        //        {
+        //            Success = true,
+        //            Message = message
+        //        });
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        // Log exception
+        //        System.Diagnostics.Debug.WriteLine($"Error in AddProductsToWarrantyCategory: {ex.Message}");
+        //        return Json(new { Success = false, Message = ex.Message });
+        //    }
+        //}
+
+        // Add these methods to your WarrantyController.cs
+
+        #region Product Popup Methods
+
+        [HttpGet]
+        public async Task<IActionResult> ProductAddPopup(int categoryId)
+        {
+
+            // Create a simple search model without relying on IProductModelFactory
+            var model = new ProductSearchModel();
+
+            // Initialize the model manually with the necessary data
+            model.SetGridPageSize();
+
+            // Prepare available categories
+            model.AvailableCategories.Add(new SelectListItem
+            {
+                Text = await _localizationService.GetResourceAsync("Admin.Common.All"),
+                Value = "0"
+            });
+
+            var categories = await _categoryService.GetAllCategoriesAsync(showHidden: true);
+            foreach (var category in categories)
+            {
+                model.AvailableCategories.Add(new SelectListItem
+                {
+                    Text = await _categoryService.GetFormattedBreadCrumbAsync(category),
+                    Value = category.Id.ToString()
+                });
+            }
+
+            // Prepare available manufacturers
+            model.AvailableManufacturers.Add(new SelectListItem
+            {
+                Text = await _localizationService.GetResourceAsync("Admin.Common.All"),
+                Value = "0"
+            });
+
+            var manufacturers = await _manufacturerService.GetAllManufacturersAsync(showHidden: true);
+            foreach (var manufacturer in manufacturers)
+            {
+                model.AvailableManufacturers.Add(new SelectListItem
+                {
+                    Text = manufacturer.Name,
+                    Value = manufacturer.Id.ToString()
+                });
+            }
+
+            // Store the category ID in ViewBag to be used in the form
+            ViewBag.CategoryId = categoryId;
+
+            return View("~/Plugins/Misc.ProductWarranty/Areas/Admin/Views/Warranty/ProductAddPopup.cshtml", model);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> ProductAddPopupList(ProductSearchModel searchModel)
+        {
+
+            // Search for products directly
+            var products = await _productService.SearchProductsAsync(
+                categoryIds: searchModel.SearchCategoryId > 0 ? new List<int> { searchModel.SearchCategoryId } : null,
+                manufacturerIds: searchModel.SearchManufacturerId > 0 ? new List<int> { searchModel.SearchManufacturerId } : null,
+                storeId: searchModel.SearchStoreId,
+                vendorId: searchModel.SearchVendorId,
+                productType: searchModel.SearchProductTypeId > 0 ? (ProductType?)searchModel.SearchProductTypeId : null,
+                keywords: searchModel.SearchProductName,
+                pageIndex: searchModel.Page - 1,
+                pageSize: searchModel.PageSize,
+                showHidden: true);
+
+            // Create response model
+            var model = new ProductListModel
+            {
+                Data = products.Select(product => new ProductModel
+                {
+                    Id = product.Id,
+                    Name = product.Name,
+                    Published = product.Published
+                }).ToList(),
+                Draw = searchModel.Draw,
+                RecordsTotal = products.TotalCount,
+                RecordsFiltered = products.TotalCount
+            };
+
+            return Json(model);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> ProductAddPopup(int categoryId, [FromForm] IFormCollection form)
+        {
+
+            // Get the warranty category
+            var category = await _warrantyService.GetWarrantyCategoryByIdAsync(categoryId);
+            if (category == null)
+                return RedirectToAction("Categories");
+
+            // Get selected product IDs from the form
+            var selectedIds = form["selectedIds"]
+                .ToString()
+                .Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries)
+                .Select(int.Parse)
+                .ToList();
+
+            if (selectedIds.Any())
+            {
+                // Get existing product mappings to avoid duplicates
                 var existingMappings = await _warrantyService.GetProductWarrantyMappingsByCategoryIdAsync(categoryId);
                 var existingProductIds = existingMappings.Select(m => m.ProductId).ToList();
 
-                // Add new mappings
-                var newProductIds = productIds.Except(existingProductIds).ToList();
+                // Filter out products that are already mapped
+                var newProductIds = selectedIds.Except(existingProductIds).ToList();
+
+                // Add new product mappings
                 foreach (var productId in newProductIds)
                 {
                     var mapping = new ProductWarrantyMappingRecord
@@ -432,28 +613,14 @@ namespace Nop.Plugin.Misc.ProductWarranty.Areas.Admin.Controllers
 
                     await _warrantyService.InsertProductWarrantyMappingAsync(mapping);
                 }
-
-                // Remove mappings that were unchecked
-                var removedProductIds = existingProductIds.Except(productIds).ToList();
-                foreach (var productId in removedProductIds)
-                {
-                    var mapping = existingMappings.FirstOrDefault(m => m.ProductId == productId);
-                    if (mapping != null)
-                        await _warrantyService.DeleteProductWarrantyMappingAsync(mapping);
-                }
-
-                return Json(new
-                {
-                    Success = true,
-                    Message = await _localizationService.GetResourceAsync("Plugins.Misc.ProductWarranty.WarrantyMapping.ProductsUpdated")
-                });
             }
-            catch (Exception ex)
-            {
-                // Log exception
-                return Json(new { Success = false, Message = ex.Message });
-            }
+
+            ViewBag.RefreshPage = true;
+
+            return View("~/Plugins/Misc.ProductWarranty/Areas/Admin/Views/Warranty/ProductAddPopup.cshtml", new ProductSearchModel());
         }
+
+        #endregion
 
         [HttpGet]
         public async Task<IActionResult> GetManufacturers()
@@ -495,6 +662,8 @@ namespace Nop.Plugin.Misc.ProductWarranty.Areas.Admin.Controllers
 
                 return RedirectToAction("Categories");
             }
+
+            //model.SetGridPageSize();
 
             model.CreatedOn = category.CreatedOnUtc;
             model.UpdatedOn = category.UpdatedOnUtc;
