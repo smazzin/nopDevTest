@@ -415,81 +415,6 @@ namespace Nop.Plugin.Misc.ProductWarranty.Areas.Admin.Controllers
             return Json(new { Data = model });
         }
 
-        //[HttpPost]
-        //public async Task<IActionResult> AddProductsToWarrantyCategory(int categoryId, string productIdsString)
-        //{
-        //    try
-        //    {
-        //        if (string.IsNullOrEmpty(productIdsString))
-        //            return Json(new { Success = false, Message = "No products selected" });
-
-        //        System.Diagnostics.Debug.WriteLine($"Received category ID: {categoryId}");
-        //        System.Diagnostics.Debug.WriteLine($"Received product IDs string: {productIdsString}");
-
-        //        // Convert comma-separated string to list of integers
-        //        var productIds = productIdsString.Split(',')
-        //            .Select(id => int.TryParse(id, out int parsedId) ? parsedId : 0)
-        //            .Where(id => id > 0)
-        //            .ToList();
-
-        //        if (!productIds.Any())
-        //            return Json(new { Success = false, Message = "Invalid product IDs" });
-
-        //        System.Diagnostics.Debug.WriteLine($"Parsed product IDs: {string.Join(", ", productIds)}");
-
-        //        // Get existing mappings to avoid duplicates
-        //        var existingMappings = await _warrantyService.GetProductWarrantyMappingsByCategoryIdAsync(categoryId);
-        //        var existingProductIds = existingMappings.Select(m => m.ProductId).ToList();
-
-        //        // Add new mappings
-        //        var newProductIds = productIds.Except(existingProductIds).ToList();
-        //        int addedCount = 0;
-
-        //        foreach (var productId in newProductIds)
-        //        {
-        //            var mapping = new ProductWarrantyMappingRecord
-        //            {
-        //                ProductId = productId,
-        //                WarrantyCategoryId = categoryId,
-        //                DisplayOrder = 1,
-        //                IsActive = true
-        //            };
-
-        //            await _warrantyService.InsertProductWarrantyMappingAsync(mapping);
-        //            addedCount++;
-        //        }
-
-        //        // Remove mappings that were unchecked
-        //        var removedProductIds = existingProductIds.Except(productIds).ToList();
-        //        int removedCount = 0;
-
-        //        foreach (var productId in removedProductIds)
-        //        {
-        //            var mapping = existingMappings.FirstOrDefault(m => m.ProductId == productId);
-        //            if (mapping != null)
-        //            {
-        //                await _warrantyService.DeleteProductWarrantyMappingAsync(mapping);
-        //                removedCount++;
-        //            }
-        //        }
-
-        //        string message = $"{addedCount} products added and {removedCount} products removed successfully";
-        //        return Json(new
-        //        {
-        //            Success = true,
-        //            Message = message
-        //        });
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        // Log exception
-        //        System.Diagnostics.Debug.WriteLine($"Error in AddProductsToWarrantyCategory: {ex.Message}");
-        //        return Json(new { Success = false, Message = ex.Message });
-        //    }
-        //}
-
-        // Add these methods to your WarrantyController.cs
-
         #region Product Popup Methods
 
         [HttpGet]
@@ -578,46 +503,63 @@ namespace Nop.Plugin.Misc.ProductWarranty.Areas.Admin.Controllers
         [HttpPost]
         public async Task<IActionResult> ProductAddPopup(int categoryId, [FromForm] IFormCollection form)
         {
-
-            // Get the warranty category
-            var category = await _warrantyService.GetWarrantyCategoryByIdAsync(categoryId);
-            if (category == null)
-                return RedirectToAction("Categories");
-
-            // Get selected product IDs from the form
-            var selectedIds = form["selectedIds"]
-                .ToString()
-                .Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries)
-                .Select(int.Parse)
-                .ToList();
-
-            if (selectedIds.Any())
+            try
             {
-                // Get existing product mappings to avoid duplicates
-                var existingMappings = await _warrantyService.GetProductWarrantyMappingsByCategoryIdAsync(categoryId);
-                var existingProductIds = existingMappings.Select(m => m.ProductId).ToList();
+                // Get the warranty category
+                var category = await _warrantyService.GetWarrantyCategoryByIdAsync(categoryId);
+                if (category == null)
+                    return RedirectToAction("Categories");
 
-                // Filter out products that are already mapped
-                var newProductIds = selectedIds.Except(existingProductIds).ToList();
+                // Get the selected product IDs string from form
+                var selectedIdsString = form["selectedIds"].ToString();
+                Console.WriteLine($"Selected IDs string: {selectedIdsString}");
 
-                // Add new product mappings
-                foreach (var productId in newProductIds)
+                // Convert to list of integers
+                var selectedIds = selectedIdsString
+                    .Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries)
+                    .Select(id => int.TryParse(id, out int parsedId) ? parsedId : 0)
+                    .Where(id => id > 0)
+                    .ToList();
+
+                Console.WriteLine($"Parsed product IDs: {string.Join(", ", selectedIds)}");
+
+                if (selectedIds.Any())
                 {
-                    var mapping = new ProductWarrantyMappingRecord
+                    // Get existing mappings
+                    var existingMappings = await _warrantyService.GetProductWarrantyMappingsByCategoryIdAsync(categoryId);
+                    var existingProductIds = existingMappings.Select(m => m.ProductId).ToList();
+
+                    // Filter out products that are already mapped
+                    var newProductIds = selectedIds.Except(existingProductIds).ToList();
+                    Console.WriteLine($"New product IDs to add: {string.Join(", ", newProductIds)}");
+
+                    // Add new mappings
+                    foreach (var productId in newProductIds)
                     {
-                        ProductId = productId,
-                        WarrantyCategoryId = categoryId,
-                        DisplayOrder = 1,
-                        IsActive = true
-                    };
+                        var mapping = new ProductWarrantyMappingRecord
+                        {
+                            ProductId = productId,
+                            WarrantyCategoryId = categoryId,
+                            DisplayOrder = 1,
+                            IsActive = true
+                        };
 
-                    await _warrantyService.InsertProductWarrantyMappingAsync(mapping);
+                        await _warrantyService.InsertProductWarrantyMappingAsync(mapping);
+                        Console.WriteLine($"Added product ID: {productId}");
+                    }
                 }
+
+                // Set flag to refresh the parent window
+                ViewBag.RefreshPage = true;
+
+                return View("~/Plugins/Misc.ProductWarranty/Areas/Admin/Views/Warranty/ProductAddPopup.cshtml");
             }
-
-            ViewBag.RefreshPage = true;
-
-            return View("~/Plugins/Misc.ProductWarranty/Areas/Admin/Views/Warranty/ProductAddPopup.cshtml", new ProductSearchModel());
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error in ProductAddPopup: {ex.Message}");
+                // Return with error
+                return View("~/Plugins/Misc.ProductWarranty/Areas/Admin/Views/Warranty/ProductAddPopup.cshtml");
+            }
         }
 
         #endregion

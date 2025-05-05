@@ -1,26 +1,29 @@
 ﻿@model Nop.Web.Areas.Admin.Models.Catalog.ProductSearchModel
 @{
-	Layout = "_AdminPopupLayout";
-
-	//page title
-	ViewBag.PageTitle = T("Plugins.Misc.ProductWarranty.WarrantyMapping.AddProducts").Text;
+    Layout = "_AdminPopupLayout";
+    ViewBag.PageTitle = T("Plugins.Misc.ProductWarranty.WarrantyMapping.AddProducts").Text;
 }
 
 @if (ViewBag.RefreshPage == true)
 {
-	<script>
-		try {window.opener.document.forms['@(Context.Request.Query["formId"])'].@(Context.Request.Query["btnId"]).click();}
-		catch (e){}
-		window.close();
-	</script>
+    <script>
+        try {
+            window.opener.document.getElementById('btnRefreshProductMappings').click();
+            window.close();
+        } catch (e) {
+            console.error("Error refreshing parent window:", e);
+        }
+    </script>
 }
 else
 {
-	<form asp-controller="Warranty" asp-action="ProductAddPopup"
-		  asp-route-categoryId="@ViewBag.CategoryId"
-		  asp-route-btnId="@Context.Request.Query["btnId"]"
-		  asp-route-formId="@Context.Request.Query["formId"]">
-		<input type="hidden" name="categoryId" value="@ViewBag.CategoryId" />
+    <form asp-controller="Warranty" asp-action="ProductAddPopup"
+          asp-route-categoryId="@ViewBag.CategoryId"
+          asp-route-btnId="@Context.Request.Query["btnId"]"
+          asp-route-formId="@Context.Request.Query["formId"]"
+          method="post">
+        @Html.AntiForgeryToken()
+        <input type="hidden" name="categoryId" value="@ViewBag.CategoryId" />
 		<div class="content-header clearfix">
 			<h1 class="float-left">
 				@T("Plugins.Misc.ProductWarranty.WarrantyMapping.AddProducts")
@@ -153,34 +156,35 @@ else
 			</div>
 		</section>
 	</form>
-}
-<script>
-	$(document).ready(function () {
-		$('button[name="save"]').click(function (e) {
-			e.preventDefault();
+	<script>
+		$(document).ready(function () {
+			// When form is submitted
+			$('form').on('submit', function (e) {
+				e.preventDefault();
 
-			// Get all checked checkboxes
-			var selectedIds = [];
-			$('input[name="selectedIds"]:checked').each(function () {
-				selectedIds.push($(this).val());
+				// Get all selected product IDs
+				var selectedIds = [];
+				$('input[name="selectedIds"]:checked').each(function () {
+					selectedIds.push($(this).val());
+				});
+
+				// Validate selection
+				if (selectedIds.length === 0) {
+					alert('Please select at least one product');
+					return false;
+				}
+
+				console.log('Selected product IDs:', selectedIds.join(','));
+
+				// Add the selected IDs to the form
+				if ($('#selected-products-input').length === 0) {
+					$(this).append('<input type="hidden" id="selected-products-input" name="selectedIds" />');
+				}
+				$('#selected-products-input').val(selectedIds.join(','));
+
+				// Submit the form
+				this.submit();
 			});
-
-			// If no products selected, show error
-			if (selectedIds.length === 0) {
-				alert('Please select at least one product');
-				return;
-			}
-
-			// Add selected IDs to a hidden input
-			if ($('#selected-products-ids').length === 0) {
-				$('form').append('<input type="hidden" id="selected-products-ids" name="selectedIds" />');
-			}
-
-			// Set the value
-			$('#selected-products-ids').val(selectedIds.join(','));
-
-			// Submit the form
-			$('form').submit();
 		});
-	});
-</script>
+	</script>
+}
