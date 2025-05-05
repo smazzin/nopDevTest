@@ -120,6 +120,8 @@ namespace Nop.Plugin.Misc.ProductWarranty
                 ["Plugins.Misc.ProductWarranty.WarrantyMapping.Added"] = "The warranty has been added to the product successfully.",
                 ["Plugins.Misc.ProductWarranty.WarrantyMapping.Updated"] = "The warranty has been updated successfully.",
                 ["Plugins.Misc.ProductWarranty.WarrantyMapping.Deleted"] = "The warranty has been removed from the product successfully.",
+                ["Plugins.misc.productwarranty.warrantymapping.addproducts"] = "Add products",
+                ["Plugins.misc.productwarranty.warrantymapping.editmapping"] = "Edit product mapping",
 
                 // Mapping fields
                 ["Plugins.Misc.ProductWarranty.WarrantyMapping.Fields.Product"] = "Product",
